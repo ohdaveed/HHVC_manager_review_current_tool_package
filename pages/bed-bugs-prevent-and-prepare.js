@@ -84,7 +84,7 @@ window.HHVC_PAGES['bedBugsInfo'] = {
     },
     {
       heading: 'What tenants need to do before treatment',
-      karl: "Maps to a sixth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. Paraphrases SFDPH Tenant Guidelines for Unit Preparation Prior to Bed Bug Treatment (Director's Rules Tenant 3.1-3.4). The Callout below is its own Callout stream item.",
+      karl: "Maps to a sixth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. Paraphrases SFDPH Tenant Guidelines for Unit Preparation Prior to Bed Bug Treatment (Director's Rules Tenant 3.1-3.4). Dryer time is 45 minutes by HHVC decision 2026-11-26, following SF Environment's 2024 'Pest management in your home' handout; the 2012-era Director's Rules Tenant 3.4 states 30 minutes as the minimum. The 4-week monitoring bullet is also an HHVC decision 2026-11-26. The Callout below is its own Callout stream item.",
       kind: 'body',
       paragraphs: [
         'Treatment only works if the unit is ready. The pest control company will give you a checklist. If it is different from the list below, follow their checklist.',
@@ -93,13 +93,9 @@ window.HHVC_PAGES['bedBugsInfo'] = {
         '**Let them in.** You must allow the owner or pest control company into your unit after you get notice that they will inspect or treat.',
         '**Make space.** Move furniture away from the walls and clear clutter so they can reach every area.',
         '**Do not remove items before treatment.** Only take out bagged clothing for laundry, or items the pest control company tells you to remove.',
-        {
-          text: '**Wash and dry all clothing and bedding.** Use hot water and the hottest dryer setting for at least 30 minutes. Then store it in new, clean, sealed plastic bags.',
-          unverified: true,
-          unverifiedReason:
-            "The 30-minute dryer time is from Director's Rules Tenant 3.4 as quoted in the 2012-era tenant guidelines. Confirm against the current rules before publication.",
-        },
+        '**Wash and dry all clothing and bedding.** Use hot water and the hottest dryer setting for at least 45 minutes. Then store it in new, clean, sealed plastic bags.',
         '**Wait until you are cleared.** Do not move back in until the pest control company says it is safe.',
+        '**Leave bed bug monitors in place.** Monitoring continues for 4 weeks after the last treatment to make sure the bed bugs are gone.',
       ],
       callout: {
         karl: 'Maps to its own Callout stream item (a sibling of the Title and text item above). Single rich text field only, no separate title field — this callout has none, so no mismatch.',
@@ -109,7 +105,7 @@ window.HHVC_PAGES['bedBugsInfo'] = {
     },
     {
       heading: 'What owners and managers need to do',
-      karl: "Maps to a seventh Title and text block: Title = this heading, Text = the bulleted list below. Paraphrases Director's Rules Owner 3.3-3.5 as quoted in the SFDPH tenant guidelines.",
+      karl: "Maps to a seventh Title and text block: Title = this heading, Text = the bulleted list below. Paraphrases Director's Rules Owner 3.3-3.5 as quoted in the SFDPH tenant guidelines. The 4-week monitoring bullet is an HHVC decision 2026-11-26 (an SF Environment relocation guideline attributes a 4-week post-treatment monitoring requirement to SF DPH regulations).",
       kind: 'body',
       bullets: [
         '**Give tenants sealable plastic bags** for clothing before and after it is washed.',
@@ -121,6 +117,7 @@ window.HHVC_PAGES['bedBugsInfo'] = {
             'Director\'s Rules Owner 3.5 ("to the extent required by applicable City and County, State and Federal law"). Confirm the scope of this duty with HHVC and the City Attorney before publication.',
         },
         '**Give advance notice of any pesticide treatment.** Tell tenants the name of the product and the phone number for Poison Control.',
+        '**Keep monitoring for 4 weeks after the last treatment.** Use bed bug monitors, such as interceptor cups under the bed legs, to check that the bed bugs are gone.',
       ],
     },
     {

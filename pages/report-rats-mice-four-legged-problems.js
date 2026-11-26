@@ -122,7 +122,7 @@ window.HHVC_PAGES['rodentsReport'] = {
         'It may take us a few weekdays to get back to you. In the meantime, here are a few things you can do to help with the problem.',
       ],
       bullets: [
-        '**Close off entry points:** Seal any gap bigger than a pencil with rodent-proof materials like hardware cloth, copper mesh, or sheet metal.',
+        '**Close off entry points:** Seal any gap bigger than a pencil with rodent-proof materials like hardware cloth, copper mesh, or sheet metal. Do not use spray foam.',
         '**Cut off food:** Store food and garbage in bins with tight-fitting lids. Do not leave pet food out overnight.',
         '**Remove hiding places:** Clear clutter and trim overgrown plants where rats, mice, and raccoons hide or nest.',
         '**Trap safely:** Use snap traps indoors. Do not use poisons — they can harm children, pets, and wildlife.',

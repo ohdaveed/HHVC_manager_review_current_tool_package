@@ -143,7 +143,7 @@ window.HHVC_PAGES['ownerGuidance'] = {
       bullets: [
         '[UC IPM: Pest prevention](https://ipm.ucanr.edu/home-and-landscape/guide-for-property-managers/pest-prevention/)',
         '[SF Environment: Pest Prevention by Design](https://sfenvironment.org/download/pest-prevention-by-design-guidelines)',
-        'Seal gaps larger than 1/4 inch around doors, windows, pipes, vents, and utility openings with rodent-proof materials. Examples include hardware cloth, copper mesh, sheet metal, concrete, mortar, or steel wool backed by sealant.',
+        'Seal gaps larger than 1/4 inch around doors, windows, pipes, vents, and utility openings with rodent-proof materials. Examples include hardware cloth, copper mesh, sheet metal, concrete, mortar, or steel wool backed by sealant. HHVC does not recommend spray foam, because inspectors cannot confirm that steel wool was packed in first.',
         "Maintain tree and shrub branches at least 6 feet away from walls or roofs to prevent rodents from climbing onto structures (Pest Prevention by Design). Director's Rules require at least 3 feet for enforcement inspections.",
         'Keep a 24-inch clear space along fences and exterior walls to reduce rodent movement and allow visibility.',
         'Apply gravel around foundations to prevent burrowing. Store wood piles, lumber, and other materials at least 6 inches off the ground and 6 inches away from any wall or fence, so rub marks and runways stay visible during an inspection.',

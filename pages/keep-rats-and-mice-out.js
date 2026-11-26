@@ -62,15 +62,17 @@ window.HHVC_PAGES['rodentsPrevention'] = {
       ],
     },
     {
-      heading: "Holes and gaps are your landlord's job",
-      karl: 'Maps to a fifth Title and text block: Title = this heading, Text = the two paragraphs plus the bulleted list below. Gap sizes are UC IPM (rats and mice: seal holes larger than 1/4 inch). The Callout below is its own Callout stream item.',
+      heading: 'Seal holes and gaps',
+      karl: 'Maps to a fifth Title and text block: Title = this heading, Text = the two paragraphs plus the bulleted list below. Gap sizes are UC IPM (rats and mice: seal holes larger than 1/4 inch). Sealing split (owners responsible; tenants may fill small gaps) and the no-foam rule are an HHVC decision 2026-11-26; steel wool or copper mesh then caulk follows the Pestec multifamily guide (Appendix F). The Callout below is its own Callout stream item.',
       kind: 'body',
       paragraphs: [
         'A mouse can squeeze through a hole about the size of a pencil. Rats and mice get in around pipes, vents, and gaps under doors.',
-        "In a rental, sealing the building is the owner's responsibility. Holes should be closed with metal or concrete. Rats and mice chew through foam, rubber, plastic, and wood.",
+        "In a rental, sealing the building is the owner's responsibility. Holes should be closed with metal, concrete, or steel wool covered with caulk, because rats and mice chew through foam, rubber, plastic, and wood.",
       ],
       bullets: [
         '**Tell your landlord in writing** about the signs you see and any holes you find.',
+        '**You can fill small gaps inside your home yourself.** Stuff the gap tightly with steel wool or copper mesh, then seal it with caulk.',
+        '**Do not use spray foam.** HHVC does not recommend it, because no one can see whether steel wool was packed in first.',
         {
           text: '**Your landlord must look into it within 72 hours** and use a licensed pest control company.',
           unverified: true,

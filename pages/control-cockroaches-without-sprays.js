@@ -64,7 +64,7 @@ window.HHVC_PAGES['cockroachesPrevention'] = {
     },
     {
       heading: "Your landlord's part",
-      karl: "Maps to a fifth Title and text block: Title = this heading, Text = the two paragraphs plus the bulleted list below. 1/8-inch gap size is the Pestec multifamily guide's measurable standard.",
+      karl: "Maps to a fifth Title and text block: Title = this heading, Text = the two paragraphs plus the bulleted list below. 1/8-inch gap size is the Pestec multifamily guide's measurable standard. Sealing split (owners responsible; tenants may seal small cracks) and the no-foam rule are an HHVC decision 2026-11-26.",
       kind: 'body',
       paragraphs: [
         'Cockroaches move between units through gaps around pipes, under sinks, and along walls. In an apartment building, the whole building may need treatment.',
@@ -72,6 +72,7 @@ window.HHVC_PAGES['cockroachesPrevention'] = {
       ],
       bullets: [
         '**Tell your landlord in writing** where you see cockroaches.',
+        '**You can seal small cracks yourself** with caulk, such as gaps around pipes under the sink. Do not use spray foam.',
         '**Ask for a licensed pest control company** that uses baits and sealing, not just sprays.',
         '**If nothing starts within 72 hours, report it.** [Report cockroaches, mosquitoes, and other insects](insectsReport)',
       ],

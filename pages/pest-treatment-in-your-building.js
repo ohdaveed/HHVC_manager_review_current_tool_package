@@ -73,6 +73,7 @@ window.HHVC_PAGES['pestTreatmentInfo'] = {
       bullets: [
         '**Stay out until you are told it is safe** to come back.',
         '**Do not clean away baits or dusts** the technician left in cracks and corners.',
+        '**For bed bugs, leave monitors in place.** Monitoring continues for 4 weeks after the last treatment.',
         '**Do not use your own sprays or bug bombs.** They can stop the treatment from working.',
         '**Keep notes and photos** of pests you still see, and share them with your landlord in writing.',
       ],
