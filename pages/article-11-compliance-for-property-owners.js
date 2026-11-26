@@ -10,7 +10,7 @@ window.HHVC_PAGES['article11Compliance'] = {
   ],
   reading: 'Grade 7',
   editorNote:
-    "Information page modeled on the SF.gov minimum wage ordinance pattern (sf.gov/information--minimum-wage-ordinance): a short compliance-first front door, not a replacement for the deep-dive `article11Guide` Report page it links out to. Every fact here (fee tiers, 72-hour window, 2-year records, PCO licensing, pesticide notice, training) is pulled from `article11Guide` and `payFee`, not re-derived — see each section's karl note for which source page to cross-check. The one exception is the vermin-log requirement, which no other mockup page carries: it comes straight from the Director's Rules excerpt at `docs/source/hhvc-policy/2026-07-08-residential-building-owner-operator-guidelines-vector-control.md` (item 2), the same sentence the 72-hour window is quoted from. Worth adding to `article11Guide`'s owner-responsibility table as well, so this page keeps summarizing rather than becoming the sole source for it. Two open questions carried from the design spec, not blocking: (1) whether Karl's Information content type has a distinct checklist/callout-with-list block, or whether the bulleted list used below (see \"What Article 11 requires\" section) is the closest real-schema fit; (2) the same `cost` panel radio-option gap already flagged on `payFee` — no \"varies by unit count\" option, so Range or Minimum-and-up is Digital Services' call.",
+    "Information page modeled on the SF.gov minimum wage ordinance pattern (sf.gov/information--minimum-wage-ordinance): a short compliance-first front door, not a replacement for the deep-dive `article11Guide` Report page it links out to. Every fact here (fee tiers, 72-hour window, 2-year records, PCO licensing, pesticide notice, training) is pulled from `article11Guide` and `payFee`, not re-derived — see each section's karl note for which source page to cross-check. The one exception is the vermin-log requirement (`ownerGuidance` and `pestTreatmentInfo` now carry it too), which comes straight from the Director's Rules excerpt at `docs/source/hhvc-policy/2026-07-08-residential-building-owner-operator-guidelines-vector-control.md` (item 2), the same sentence the 72-hour window is quoted from. Worth adding to `article11Guide`'s owner-responsibility table as well, so this page keeps summarizing rather than becoming the sole source for it. Two open questions carried from the design spec, not blocking: (1) whether Karl's Information content type has a distinct checklist/callout-with-list block, or whether the bulleted list used below (see \"What Article 11 requires\" section) is the closest real-schema fit; (2) the same `cost` panel radio-option gap already flagged on `payFee` — no \"varies by unit count\" option, so Range or Minimum-and-up is Digital Services' call.",
   editorStatus: 'needs-review',
   topicTag: 'Agency: Healthy Housing and Vector Control',
   whatToKnow: {
@@ -44,7 +44,7 @@ window.HHVC_PAGES['article11Compliance'] = {
     },
     {
       heading: 'If you get a report or notice',
-      karl: 'Maps to a second Title and text block: Title = this heading, Text = the two paragraphs plus the two-item linked bullet list below. 72-hour figure and NOV description verified against `article11Guide` and `respond-to-notice-of-violation.js` (`noticeOfViolation`).',
+      karl: 'Maps to a second Title and text block: Title = this heading, Text = the two paragraphs plus the four-item linked bullet list below (two internal links; two External links to live SF.gov pages checked 2026-11-26: the DPH Director’s Hearing rules page and DBI’s building-code violation page, the latter an interagency routing pointer only). 72-hour figure and NOV description verified against `article11Guide` and `respond-to-notice-of-violation.js` (`noticeOfViolation`).',
       kind: 'body',
       paragraphs: [
         'When a tenant reports a pest or housing health problem, owners and managers must start investigating within 72 hours.',
@@ -53,6 +53,8 @@ window.HHVC_PAGES['article11Compliance'] = {
       bullets: [
         '[Fix your Healthy Housing and Vector Control violation](noticeOfViolation)',
         '[What happens after you report](afterReport)',
+        "[Prepare for your DPH Director's Hearing](https://www.sf.gov/prepare-your-dph-directors-hearing)",
+        'Notice from the Department of Building Inspection instead? [Fix your building and housing code violation](https://www.sf.gov/step-by-step--fix-your-building-and-housing-code-violation)',
       ],
     },
     {
@@ -64,7 +66,7 @@ window.HHVC_PAGES['article11Compliance'] = {
       ],
       bullets: [
         'Investigate tenant pest reports within 72 hours of receiving them.',
-        "Keep a written log of every report or sign of vermin: rodents, fleas, flies, bedbugs, spiders, cockroaches, wasps, and mosquitoes. Give the log to your pest control operator. You can use the City's [complaint forms and log template](https://www.sf.gov/resource/2024/healthy-housing-and-pest-information).",
+        "Keep a written log of every report or sign of vermin: rodents, fleas, flies, bedbugs, spiders, cockroaches, wasps, and mosquitoes. Give the log to your pest control operator. You can use the City's [complaint forms and log template](https://www.sf.gov/resource--2024--healthy-housing-and-vermin-information).",
         'Keep records of complaints, inspections, and pest control services for at least 2 years, and make them available to DPH on request.',
         'Hire only licensed pest control operators (PCOs) to apply pesticides or trap rats — never unlicensed staff or over-the-counter treatments for significant infestations.',
         'Give tenants written notice before pesticide application, including the product name, date, and safety information.',
@@ -73,8 +75,23 @@ window.HHVC_PAGES['article11Compliance'] = {
       ],
     },
     {
+      heading: 'Identify the pests in your log',
+      karl: "Maps to a fourth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. One source per pest named in the vermin-log bullet above (Owner/Operator Guidelines item 2), so an owner or manager can identify what they are logging. Each bullet carries a Link-tool External link folded into this block's rich text — the verified Information schema has no external-URL card. All links verified 200 on 2026-11-26.",
+      kind: 'placement',
+      paragraphs: [
+        'The University of California Statewide Integrated Pest Management Program (UC IPM) publishes a guide for each pest you must log.',
+      ],
+      bullets: [
+        '[Rats](https://ipm.ucanr.edu/home-and-landscape/rats/) and [house mice](https://ipm.ucanr.edu/home-and-landscape/house-mouse/)',
+        '[Fleas](https://ipm.ucanr.edu/home-and-landscape/fleas/) and [flies](https://ipm.ucanr.edu/home-and-landscape/flies/)',
+        '[Bed bugs](https://ipm.ucanr.edu/home-and-landscape/bed-bugs/) and [cockroaches](https://ipm.ucanr.edu/home-and-landscape/cockroaches/)',
+        '[Spiders](https://ipm.ucanr.edu/home-and-landscape/spiders/) and [yellowjackets and other wasps](https://ipm.ucanr.edu/home-and-landscape/yellowjackets-and-other-social-wasps/)',
+        '[Mosquitoes](https://ipm.ucanr.edu/home-and-landscape/mosquitoes/)',
+      ],
+    },
+    {
       heading: 'Legal authority',
-      karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the intro paragraph plus the bulleted list below, mirroring the citation pattern and municode URL already used in `health-code-article-11.js`\'s "Enforcement" section and Spotlight button.',
+      karl: 'Maps to a fifth Title and text block: Title = this heading, Text = the intro paragraph plus the bulleted list below, mirroring the citation pattern and municode URL already used in `health-code-article-11.js`\'s "Enforcement" section and Spotlight button.',
       kind: 'body',
       paragraphs: ['Article 11 defines these requirements and how HHVC enforces them.'],
       bullets: [

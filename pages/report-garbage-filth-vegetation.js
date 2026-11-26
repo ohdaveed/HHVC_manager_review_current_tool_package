@@ -52,7 +52,9 @@ window.HHVC_PAGES['filthReport'] = {
         },
         {
           title: 'If you rent, give 72 hours when possible',
-          text: ['Tell the property owner or manager about the condition.'],
+          text: [
+            'Tell the property owner or manager about the condition in writing, and keep a copy.',
+          ],
           bullets: [
             'If they do not respond or start fixing it within 72 hours, submit your report right away so it can be assigned for review.',
             'Do not wait 72 hours if there is an urgent health or safety concern.',
@@ -150,10 +152,16 @@ window.HHVC_PAGES['filthReport'] = {
       ],
       cards: [
         {
-          title: 'UC IPM Pest Notes: Pigeons',
-          text: 'University of California guidance on managing pigeons around buildings.',
-          url: 'https://ipm.ucanr.edu/home-and-landscape/pigeons/pest-notes/',
-          karl: 'External link inside the supporting_information accordion. Third-party UC IPM reference in place of a City-maintained pigeon page (manager directive: do not reinvent the wheel).',
+          title: 'CDC: Histoplasmosis from bird and bat droppings',
+          text: 'Federal guidance on the lung infection that can spread from bird and bat droppings.',
+          url: 'https://www.cdc.gov/histoplasmosis/about/index.html',
+          karl: 'External link inside the supporting_information accordion. Third-party CDC (HHS) reference for the pigeon-droppings health risk. Replaces the UC IPM pigeon Pest Note, whose address returned 404 on 2026-11-26 with no current UC IPM replacement (manager directive: do not reinvent the wheel).',
+        },
+        {
+          title: 'UC IPM Pest Notes: Flies',
+          text: 'University of California guidance on house flies that breed in garbage.',
+          url: 'https://ipm.ucanr.edu/home-and-landscape/flies/',
+          karl: 'External link inside the supporting_information accordion. Third-party UC IPM reference.',
         },
         {
           title: 'EPA: Mold cleanup in your home',
@@ -164,20 +172,20 @@ window.HHVC_PAGES['filthReport'] = {
         {
           title: 'CDC: Mold and your health',
           text: 'Federal guidance on health effects of mold and how to reduce exposure.',
-          url: 'https://www.cdc.gov/mold-health-issues/about/index.html',
+          url: 'https://www.cdc.gov/mold-health/about/index.html',
           karl: 'External link inside the supporting_information accordion. Third-party CDC reference.',
         },
         {
           title: 'NEHA: Vector control resources',
           text: 'National Environmental Health Association vector control resources.',
-          url: 'https://www.neha.org/vector-control',
+          url: 'https://www.neha.org/vectors-pests',
           karl: 'External link inside the supporting_information accordion. Third-party NEHA reference.',
         },
       ],
     },
     {
       heading: 'Related pages',
-      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. 4 cards below = 4 related "Page" entries. All internal SF.gov pages — Karl Related is a page chooser and cannot hold external links.',
+      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. 5 cards below = 5 related "Page" entries. All internal SF.gov pages — Karl Related is a page chooser and cannot hold external links.',
       kind: 'placement',
       cards: [
         {
@@ -195,6 +203,10 @@ window.HHVC_PAGES['filthReport'] = {
         {
           title: 'Tenant rights when reporting housing conditions',
           target: 'tenantRights',
+        },
+        {
+          title: 'Reduce moisture and mold in your home',
+          target: 'reduceMoisture',
         },
       ],
     },

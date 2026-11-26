@@ -76,12 +76,14 @@ window.HHVC_PAGES['tenantNoticeSteps'] = {
     },
     {
       heading: 'If nothing happens by the deadline',
-      karl: "Maps to a Title and text block. Links forward to afterReport's enforcement chain instead of restating its unverified fee/hearing figures, per the design spec's explicit link-forward instruction.",
+      karl: "Maps to a Title and text block. Links forward to afterReport's enforcement chain instead of restating its unverified fee/hearing figures, per the design spec's explicit link-forward instruction. The open-to-the-public sentence and the External link come from the live SF.gov DPH Environmental Health page 'Prepare for your DPH Director's Hearing' (checked 2026-11-26).",
       kind: 'body',
       paragraphs: [
         'Contact the investigator named on your notice if the property owner or manager has not started the corrective work.',
+        "If the problem is still not fixed, the case may go to a Director's Hearing. These hearings are open to the public, so you can attend.",
       ],
       bullets: [
+        "[Prepare for your DPH Director's Hearing](https://www.sf.gov/prepare-your-dph-directors-hearing)",
         '[What happens after you report a housing or pest problem](afterReport)',
         '[Fix your Healthy Housing and Vector Control violation](noticeOfViolation)',
       ],
@@ -102,6 +104,10 @@ window.HHVC_PAGES['tenantNoticeSteps'] = {
         {
           title: 'What happens after you report a housing or pest problem',
           target: 'afterReport',
+        },
+        {
+          title: 'What to expect when your building is treated for pests',
+          target: 'pestTreatmentInfo',
         },
       ],
     },

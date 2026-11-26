@@ -168,7 +168,7 @@ test.describe('accessibility', () => {
  * KNOWN BLIND SPOT, stated rather than discovered later: one page per type
  * cannot see WITHIN-type variance — Transaction has fourteen pages and only
  * the first is scanned here. The cheap fix if something slips through is a
- * non-browser structural lint over all 29 page data modules, not more axe
+ * non-browser structural lint over every page data module, not more axe
  * runs at ~2s each.
  * ------------------------------------------------------------------------ */
 

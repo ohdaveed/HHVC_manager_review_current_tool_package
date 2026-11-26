@@ -9,7 +9,7 @@ window.HHVC_PAGES['article11Guide'] = {
   reading: 'Grade 7',
   reportDate: 'August 7, 2026',
   editorStatus: 'needs-review',
-  seoTitle: 'Health Code Article 11 in plain language',
+  seoTitle: 'Health Code Article 11 in plain language | SF.gov',
   metaDescription:
     'Plain-language explanations of San Francisco Health Code Article 11 rules for garbage, pests, mold, rodents, and other public health nuisances.',
   editorNote:
@@ -239,6 +239,12 @@ window.HHVC_PAGES['article11Guide'] = {
           text: 'Learn how a report may be reviewed and assigned for inspection.',
           target: 'afterReport',
           karl: 'Report Content -> inline page link.',
+        },
+        {
+          title: "Prepare for your DPH Director's Hearing",
+          text: 'Read the rules for the hearing that Sec. 596 refers to, including written materials and interpreters.',
+          url: 'https://www.sf.gov/prepare-your-dph-directors-hearing',
+          karl: 'Report Content -> inline external link to the live SF.gov DPH Environmental Health hearing-rules page (checked 2026-11-26).',
         },
       ],
     },

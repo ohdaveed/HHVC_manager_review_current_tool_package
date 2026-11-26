@@ -29,6 +29,11 @@ import '../../pages/get-ready-for-followup-inspection.js'
 import '../../pages/hhvc-inspection-scope.js'
 import '../../pages/integrated-pest-management-property-managers.js'
 import '../../pages/healthy-housing-vermin-resources.js'
+import '../../pages/bed-bugs-prevent-and-prepare.js'
+import '../../pages/reduce-moisture-and-mold.js'
+import '../../pages/keep-rats-and-mice-out.js'
+import '../../pages/control-cockroaches-without-sprays.js'
+import '../../pages/pest-treatment-in-your-building.js'
 import '../../pages/what-happens-after-report.js'
 import '../../pages/get-ready-for-first-inspection.js'
 import '../../pages/tenant-rights-reporting.js'
@@ -66,6 +71,11 @@ window.HHVC_DATA = {
     ['article11Guide', 'Report: Health Code Article 11 in plain language'],
     ['ownerGuidance', 'Information: Integrated pest management for property owners and managers'],
     ['verminResources', 'Resource collection: Healthy housing and pest resources'],
+    ['bedBugsInfo', 'Information: Bed bugs: prevent, find, and prepare for treatment'],
+    ['reduceMoisture', 'Information: Reduce moisture and mold in your home'],
+    ['rodentsPrevention', 'Information: Keep rats and mice out of your home'],
+    ['cockroachesPrevention', 'Information: Get rid of cockroaches without heavy pesticides'],
+    ['pestTreatmentInfo', 'Information: What to expect when your building is treated for pests'],
     ['afterReport', 'Information: What happens after you report'],
     ['inspectionPrepInitial', 'Transaction: Get ready for a housing inspection after you report'],
     ['tenantRights', 'Information: Tenant rights and reporting'],

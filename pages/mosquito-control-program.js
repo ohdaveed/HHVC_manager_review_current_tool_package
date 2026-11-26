@@ -41,7 +41,7 @@ window.HHVC_PAGES['mosquitoControl'] = {
     },
     {
       heading: 'More mosquito resources',
-      karl: 'FLAG — unconfirmed, no clean mapping: this section has no paragraph/rich-text content of its own, only 3 external-URL cards. It doesn\'t fit "Related" (an internal-page-only chooser, no external URLs), and unlike other external-link cards on other pages there\'s no accompanying Title and text block whose rich text these could be folded into as Link-tool External links, since this section has nothing but a heading and cards. Raise this shape with Digital Services rather than assuming either a Title and text block (with no paragraph content to justify one) or a Related-field entry (wrong link type) applies.',
+      karl: 'FLAG — unconfirmed, no clean mapping: this section has no paragraph/rich-text content of its own, only 5 external-URL cards. It doesn\'t fit "Related" (an internal-page-only chooser, no external URLs), and unlike other external-link cards on other pages there\'s no accompanying Title and text block whose rich text these could be folded into as Link-tool External links, since this section has nothing but a heading and cards. Raise this shape with Digital Services rather than assuming either a Title and text block (with no paragraph content to justify one) or a Related-field entry (wrong link type) applies.',
       kind: 'placement',
       cards: [
         {
@@ -61,6 +61,18 @@ window.HHVC_PAGES['mosquitoControl'] = {
           text: 'Dead birds help track West Nile virus. Report them to the State West Nile virus program.',
           url: 'https://westnile.ca.gov/report',
           karl: 'External-URL card with no clean mapping in the verified Information schema — same gap as the siblings above. Replaces the retired City dead-bird transaction page — the State runs this reporting line (manager decision at plan review).',
+        },
+        {
+          title: 'UC IPM Pest Notes: Mosquitoes',
+          text: 'University of California guidance on mosquitoes and standing water around homes.',
+          url: 'https://ipm.ucanr.edu/home-and-landscape/mosquitoes/',
+          karl: 'External-URL card with no clean mapping in the verified Information schema — same gap as the siblings above; flag for Digital Services.',
+        },
+        {
+          title: 'CDC: West Nile virus',
+          text: 'Federal guidance on West Nile virus symptoms and prevention.',
+          url: 'https://www.cdc.gov/west-nile-virus/index.html',
+          karl: 'External-URL card with no clean mapping in the verified Information schema — same gap as the siblings above; flag for Digital Services.',
         },
       ],
     },

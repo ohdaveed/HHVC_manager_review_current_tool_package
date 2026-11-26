@@ -71,7 +71,7 @@ window.HHVC_PAGES['ownerGuidance'] = {
         {
           title: 'SF Environment: Pestec IPM guidelines for multifamily housing',
           text: 'SF-local operations manual for multi-unit buildings — turnover proofing, resident toolkit gap sizes, and sample IPM plans.',
-          url: 'https://sfenvironment.org/article/integrated-pest-management-ipm-guidelines-for-multifamily-housing',
+          url: 'https://www.sfenvironment.org/integrated-pest-management-multifamily-housing',
           karl: 'Body external link: SF Environment Pestec multifamily IPM guidelines (supplemental)',
         },
       ],
@@ -135,19 +135,20 @@ window.HHVC_PAGES['ownerGuidance'] = {
     },
     {
       heading: '3. Prevent pests and seal entry points',
-      karl: 'Maps to a seventh Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
+      karl: 'Maps to a seventh Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. The turnover bullet lists conditions the SF Environment / Pestec, Guidelines for IPM in San Francisco Multi-Family Housing Communities (2013; local copy docs/source/hhvc-policy/2026-07-07-pestec-ipm-multifamily-housing.pdf) names as letting pests pass between units (Section 3 and Appendix G). Pest Prevention by Design link updated 2026-11-26 to its final URL (the old /download/ path redirected twice).',
       kind: 'placement',
       paragraphs: [
         'Prevent pest problems by fixing the conditions that let pests enter, hide, feed, or breed. Maintenance, landscape management, and sanitation are core parts of IPM.',
       ],
       bullets: [
         '[UC IPM: Pest prevention](https://ipm.ucanr.edu/home-and-landscape/guide-for-property-managers/pest-prevention/)',
-        '[SF Environment: Pest Prevention by Design](https://sfenvironment.org/download/pest-prevention-by-design-guidelines)',
-        'Seal gaps larger than 1/4 inch around doors, windows, pipes, vents, and utility openings with rodent-proof materials. Examples include hardware cloth, copper mesh, sheet metal, concrete, mortar, or steel wool backed by sealant.',
+        '[SF Environment: Pest Prevention by Design](https://www.sfenvironment.org/pest-prevention-design-guidelines)',
+        'Seal gaps larger than 1/4 inch around doors, windows, pipes, vents, and utility openings with rodent-proof materials. Examples include hardware cloth, copper mesh, sheet metal, concrete, mortar, or steel wool backed by sealant. HHVC does not recommend spray foam, because inspectors cannot confirm that steel wool was packed in first.',
         "Maintain tree and shrub branches at least 6 feet away from walls or roofs to prevent rodents from climbing onto structures (Pest Prevention by Design). Director's Rules require at least 3 feet for enforcement inspections.",
         'Keep a 24-inch clear space along fences and exterior walls to reduce rodent movement and allow visibility.',
         'Apply gravel around foundations to prevent burrowing. Store wood piles, lumber, and other materials at least 6 inches off the ground and 6 inches away from any wall or fence, so rub marks and runways stay visible during an inspection.',
         'Build pest-proofing into repair, remodeling, and construction work.',
+        'At unit turnover, seal the gaps that let pests move between units: around stove gas lines, plumbing and radiator pipes, sink and stove cabinets, kickplates, and loose baseboards.',
       ],
     },
     {
@@ -168,7 +169,7 @@ window.HHVC_PAGES['ownerGuidance'] = {
     },
     {
       heading: '5. Share clear instructions and support residents',
-      karl: 'Maps to a ninth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
+      karl: "Maps to a ninth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. Move-in orientation and resident support staff are from the SF Environment / Pestec, Guidelines for IPM in San Francisco Multi-Family Housing Communities (2013; local copy docs/source/hhvc-policy/2026-07-07-pestec-ipm-multifamily-housing.pdf), Section 3; the last bullet is a Link-tool External link to SF Environment's live page (checked 2026-11-26).",
       kind: 'placement',
       paragraphs: [
         'Tenant cooperation is important, but pest prevention cannot depend on tenants alone. Give residents clear instructions, advance notification, and help those who need it.',
@@ -179,6 +180,9 @@ window.HHVC_PAGES['ownerGuidance'] = {
         'Give proper written notice before pesticide treatments, following state laws.',
         'Provide assistance to tenants who cannot safely prepare their unit for treatment due to a disability or medical need by contacting support services.',
         'Use translated materials to share simple food storage, garbage, and clutter prevention steps.',
+        'Introduce new residents to IPM and their housekeeping responsibilities at move-in.',
+        'Work with home health aides, translators, nonprofits, and faith groups who already help residents. They can help residents prepare units for treatment.',
+        '[SF Environment: Choosing a pest control company](https://www.sfenvironment.org/choosing-pest-control-company)',
       ],
     },
     {
@@ -202,6 +206,10 @@ window.HHVC_PAGES['ownerGuidance'] = {
         {
           title: 'Learn what Healthy Housing and Vector Control can inspect',
           target: 'scopeInfo',
+        },
+        {
+          title: 'What to expect when your building is treated for pests',
+          target: 'pestTreatmentInfo',
         },
       ],
     },

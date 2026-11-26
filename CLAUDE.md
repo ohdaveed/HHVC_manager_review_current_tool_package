@@ -25,7 +25,7 @@ part of the tool works identically whether or not it's ever used.
 A separate **Vite** sub-app lives at `forms/mosquito-workshop-request/` (a real
 build step, built independently — see [Build outputs](#build-outputs)).
 
-The repo currently holds **29 pages** under `pages/`. If `bun` is not found,
+The repo currently holds **34 pages** under `pages/`. If `bun` is not found,
 it installs to `~/.bun/bin`; run `export PATH="$HOME/.bun/bin:$PATH"`. Run
 `bun install` before the first `dev` — `js/main.js` imports
 `@sfgov/design-system` CSS and the third-party libraries for Vite to bundle.
@@ -812,7 +812,7 @@ to.
   hand-rolled formula from the no-build-step era, and `build_scripts/reading-level.js`
   wrapped the library for Node — but only the Node copy had tests and only this
   one shipped, which is how they drifted 1.14 grades apart on average across
-  the 29 pages without a red test anywhere. The drift ran toward "easier than
+  all 29 pages the repo held then, without a red test anywhere. The drift ran toward "easier than
   it is" in aggregate, so nine pages reported hitting a reading target they
   miss — a check biased in exactly the direction that makes it useless. The
   Node copy is deleted and `tests/reading-level.test.js` imports this one. Do
@@ -953,7 +953,7 @@ a "Page facts" subheading, and the scored list orders **failures first**.
 carries `severity` plus a `source`/`section` pair and a ready-to-render
 `citation`. `severity: 'error'` mandates join the scored rule list behind the
 "checks passed" ratio and render their citation on the Checks tab;
-`severity: 'warning'` findings are advisory, run to ~115 across the 29 pages,
+`severity: 'warning'` findings are advisory, run to ~155 across the 34 pages,
 and render separately so they cannot swamp the ratio. A scored rule must always
 be pushed, pass or fail — dropping one shrinks the denominator and flatters the
 thinnest pages. `source` exists because not every rule comes from the manual:
@@ -1138,7 +1138,7 @@ The enforced Zod schema lives in `build_scripts/schema.js` (shared by
 has coverage independent of current page content). A page has `slug`,
 `type` (a **closed enum** — `z.enum(PAGE_TYPES)`, not a bare string — whose
 **eight** permitted values are all in use:
-`Transaction` (14 pages), `Information` (6), `Resource Collection` (3),
+`Transaction` (14 pages), `Information` (11), `Resource Collection` (3),
 `Campaign` (2), `Topic` (1), `Agency` (1), `About us` (1), and `Report` (1),
 matching Karl content-type names. It is closed rather than open because
 `js/karl/karl-blocks.js` keys its per-type panel inventory on this value, and an

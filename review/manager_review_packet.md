@@ -1,5 +1,10 @@
 # HHVC Manager Review Packet — 19-Page Agency IA
 
+> **Dated snapshot.** This packet describes the 19-page set from PR #60 and has not been
+> updated since. The current set is 34 pages: see README.md's "Pages included" table and
+> `review/mockup_tracking_sheet.csv` (regenerate with `bun run sync-tracking`). Some details
+> below are out of date; for example, `noticeOfViolation` is now `needs-review`, not `blocked`.
+
 ## Update summary
 
 This package presents the consolidated **19-page** HHVC mockup set, led by a

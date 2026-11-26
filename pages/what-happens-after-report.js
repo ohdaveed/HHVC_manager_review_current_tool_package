@@ -117,8 +117,9 @@ window.HHVC_PAGES['afterReport'] = {
           text: "Persistent violations can result in citations, civil liabilities, or a Director's Hearing to recover attorneys' fees and administrative abatement costs.",
           unverified: true,
           unverifiedReason:
-            "No tier-1 corroboration for this enforcement mechanism — the Director's Hearing / attorneys' fees / administrative abatement chain traces only to tier-3 material (source-of-truth audit 2026-07-06 — High). Confirm with HHVC/legal before publication.",
+            "Partly corroborated: SF.gov's live DPH Environmental Health page 'Prepare for your DPH Director's Hearing' (checked 2026-11-26) confirms that DPH holds Director's Hearings, but not that they recover attorneys' fees or administrative abatement costs. That part still traces only to tier-3 material (source-of-truth audit 2026-07-06 — High). Confirm with HHVC/legal before publication.",
         },
+        "[Prepare for your DPH Director's Hearing](https://www.sf.gov/prepare-your-dph-directors-hearing)",
       ],
     },
     {

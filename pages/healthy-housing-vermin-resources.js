@@ -38,6 +38,36 @@ window.HHVC_PAGES['verminResources'] = {
       ],
     },
     {
+      heading: 'Prevent pests and mold at home',
+      karl: 'Resource Collection -> Body -> Resources -> Resource section. Title = this heading. Each card becomes an SF.gov page link to one of the community-education Information pages. Placed second so prevention sits next to reporting, before the audience-specific sections.',
+      kind: 'body',
+      paragraphs: [
+        'Learn how to stop common problems before they start, or keep them from coming back after treatment.',
+      ],
+      cards: [
+        {
+          title: 'Bed bugs: prevent them, find them, and get ready for treatment',
+          target: 'bedBugsInfo',
+          karl: 'Resource section -> SF.gov page link to the bed bug Information page.',
+        },
+        {
+          title: 'Keep rats and mice out of your home',
+          target: 'rodentsPrevention',
+          karl: 'Resource section -> SF.gov page link to the rodent prevention Information page.',
+        },
+        {
+          title: 'Get rid of cockroaches without heavy pesticides',
+          target: 'cockroachesPrevention',
+          karl: 'Resource section -> SF.gov page link to the cockroach Information page.',
+        },
+        {
+          title: 'Reduce moisture and mold in your home',
+          target: 'reduceMoisture',
+          karl: 'Resource section -> SF.gov page link to the moisture and mold Information page.',
+        },
+      ],
+    },
+    {
       heading: 'If you rent',
       karl: 'Resource Collection -> Body -> Resources -> Resource section. Title = this heading. The bed-bug preparation guide is a Document Picker upload in Karl; its live URL is a mockup stand-in until the document is attached in the CMS.',
       kind: 'body',
@@ -60,6 +90,11 @@ window.HHVC_PAGES['verminResources'] = {
           target: 'afterReport',
           karl: 'Resource section -> SF.gov page link to the after-report Information page.',
         },
+        {
+          title: 'What to expect when your building is treated for pests',
+          target: 'pestTreatmentInfo',
+          karl: 'Resource section -> SF.gov page link to the pest treatment Information page.',
+        },
       ],
     },
     {
@@ -79,6 +114,11 @@ window.HHVC_PAGES['verminResources'] = {
           title: 'Integrated pest management for property owners and managers',
           target: 'ownerGuidance',
           karl: 'Resource section -> SF.gov page link to the owner-guidance Information page.',
+        },
+        {
+          title: 'What to expect when your building is treated for pests',
+          target: 'pestTreatmentInfo',
+          karl: 'Resource section -> SF.gov page link to the pest treatment Information page, which sets out owner and tenant duties side by side.',
         },
         {
           title: 'Residential building owner-operator guidelines for vector control',
@@ -125,6 +165,11 @@ window.HHVC_PAGES['verminResources'] = {
           karl: 'Resource section -> SF.gov page link to the mosquito-control Information page.',
         },
         {
+          title: 'Pest management in your home (PDF in English, Spanish, and Chinese)',
+          url: 'https://www.sfenvironment.org/media/13819',
+          karl: "Resource section -> External link to SF Environment's 2024 trifold handout, one PDF in three languages (checked 2026-11-26). Could be a Document Picker upload instead if HHVC wants the file hosted on SF.gov.",
+        },
+        {
           title: 'Watch a roach-prevention video',
           url: 'https://www.youtube.com/watch?v=S-aJzCk-rNQ',
           karl: 'Resource section -> External link. Source-page video: "Video: Roach Prevention - English." Add translated versions only after confirming their active media links.',
@@ -136,6 +181,11 @@ window.HHVC_PAGES['verminResources'] = {
       karl: 'Resource Collection -> Body -> Resources -> Resource section. Title = this heading. Use partner guidance instead of recreating a long, difficult-to-maintain species-by-species document catalog.',
       kind: 'body',
       cards: [
+        {
+          title: 'SF Environment: Managing pest problems without toxics',
+          url: 'https://www.sfenvironment.org/managing-pest-problems-without-toxics',
+          karl: "Resource section -> External link to SF Environment's do and do not list for rodents, cockroaches, bed bugs, and ants (checked 2026-11-26).",
+        },
         {
           title: 'UC IPM resources for homes and buildings',
           url: 'https://ipm.ucanr.edu/home-and-landscape/',

@@ -53,7 +53,7 @@ window.HHVC_PAGES['insectsReport'] = {
         {
           title: 'Notify your landlord before reporting',
           bullets: [
-            '**Notify your landlord:** Tell the property owner or manager about the insects. For bed bugs, owners must investigate complaints promptly and coordinate treatment.',
+            '**Notify your landlord:** Tell the property owner or manager about the insects in writing, and keep a copy. For bed bugs, owners must investigate complaints promptly and coordinate treatment.',
             '**Give them 72 hours:** If they do not start fixing the problem within 3 days, report it to the City.',
             '**Urgent problems:** If there is a serious danger to health or safety, report it right away without waiting.',
           ],
@@ -122,7 +122,7 @@ window.HHVC_PAGES['insectsReport'] = {
       ],
       bullets: [
         '**Cockroaches:** Clean up crumbs and grease, fix dripping faucets and leaks, and seal cracks near pipes. Use bait stations instead of sprays.',
-        '**Bed bugs:** Do not throw out furniture before treatment — it can spread the bugs. Wash and dry bedding on high heat, and tell your landlord right away.',
+        '**Bed bugs:** Do not throw out furniture before treatment — it can spread the bugs. Wash bedding and dry it on high heat for at least 45 minutes, and tell your landlord right away.',
         '**Mosquitoes:** Dump standing water at least once a week — buckets, planters, saucers, and clogged gutters. Fix holes in window screens.',
         '**Flies:** Bag garbage tightly and keep bin lids closed so flies cannot breed in it.',
         '**Wasps:** Do not disturb a ground nest — mark the spot and keep people and pets away until it is treated.',
@@ -131,20 +131,50 @@ window.HHVC_PAGES['insectsReport'] = {
         {
           title: 'UC IPM Pest Notes: Cockroaches',
           text: 'University of California guidance on managing cockroaches.',
-          url: 'https://ipm.ucanr.edu/home-and-landscape/cockroaches/pest-notes/',
+          url: 'https://ipm.ucanr.edu/home-and-landscape/cockroaches/',
           karl: 'External link inside the supporting_information accordion. Third-party UC IPM reference in place of a City-maintained prevention page (manager directive: do not reinvent the wheel).',
         },
         {
           title: 'UC IPM Pest Notes: Bed bugs',
           text: 'University of California guidance on identifying and treating bed bugs.',
-          url: 'https://ipm.ucanr.edu/home-and-landscape/bed-bugs/pest-notes/',
+          url: 'https://ipm.ucanr.edu/home-and-landscape/bed-bugs/',
           karl: 'External link inside the supporting_information accordion. Third-party UC IPM reference.',
         },
         {
           title: 'UC IPM Pest Notes: Mosquitoes',
           text: 'University of California guidance on reducing mosquitoes around the home.',
-          url: 'https://ipm.ucanr.edu/home-and-landscape/mosquitoes/pest-notes/',
+          url: 'https://ipm.ucanr.edu/home-and-landscape/mosquitoes/',
           karl: 'External link inside the supporting_information accordion. Third-party UC IPM reference.',
+        },
+        {
+          title: 'UC IPM Pest Notes: Flies',
+          text: 'University of California guidance on house flies and where they breed.',
+          url: 'https://ipm.ucanr.edu/home-and-landscape/flies/',
+          karl: 'External link inside the supporting_information accordion. Third-party UC IPM reference.',
+        },
+        {
+          title: 'UC IPM Pest Notes: Yellowjackets and other social wasps',
+          text: 'University of California guidance on ground nests and wasp safety.',
+          url: 'https://ipm.ucanr.edu/home-and-landscape/yellowjackets-and-other-social-wasps/',
+          karl: 'External link inside the supporting_information accordion. Third-party UC IPM reference.',
+        },
+        {
+          title: 'UC IPM Pest Notes: Fleas',
+          text: 'University of California guidance on fleas in homes and on pets.',
+          url: 'https://ipm.ucanr.edu/home-and-landscape/fleas/',
+          karl: 'External link inside the supporting_information accordion. Third-party UC IPM reference.',
+        },
+        {
+          title: 'UC IPM Pest Notes: Itching and infestation',
+          text: 'University of California guidance on bird and rodent mites and other causes of bites and itching.',
+          url: 'https://ipm.ucanr.edu/home-and-landscape/itching-and-infestation-whats-attacking-me/',
+          karl: 'External link inside the supporting_information accordion. Third-party UC IPM reference.',
+        },
+        {
+          title: 'CDC: About bed bugs',
+          text: 'Federal guidance on bed bug bites and prevention.',
+          url: 'https://www.cdc.gov/bed-bugs/about/index.html',
+          karl: 'External link inside the supporting_information accordion. Third-party CDC (HHS) reference.',
         },
         {
           title: 'CDC: Preventing mosquito bites',
@@ -168,7 +198,7 @@ window.HHVC_PAGES['insectsReport'] = {
     },
     {
       heading: 'Related pages',
-      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. 4 cards below = 4 related "Page" entries. All internal SF.gov pages — Karl Related is a page chooser and cannot hold external links.',
+      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. 6 cards below = 6 related "Page" entries. All internal SF.gov pages — Karl Related is a page chooser and cannot hold external links.',
       kind: 'placement',
       cards: [
         {
@@ -186,6 +216,14 @@ window.HHVC_PAGES['insectsReport'] = {
         {
           title: 'Tenant rights when reporting housing conditions',
           target: 'tenantRights',
+        },
+        {
+          title: 'Bed bugs: prevent them, find them, and get ready for treatment',
+          target: 'bedBugsInfo',
+        },
+        {
+          title: 'Get rid of cockroaches without heavy pesticides',
+          target: 'cockroachesPrevention',
         },
       ],
     },

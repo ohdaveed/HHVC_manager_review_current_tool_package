@@ -21,7 +21,14 @@ const { fleschKincaidGrade, extractPageBodyText, normalizeTextItem, calloutText,
 describe('load-pages', () => {
   test('discovers all page modules and loads HHVC_DATA', () => {
     const data = loadPageData()
-    expect(data.order.length).toBe(29)
+    // Derived from the filesystem rather than hardcoded: a literal count went
+    // stale every time a page was added, which is the exact failure the repo's
+    // test-data rule forbids. The assertion that matters is that `order`
+    // covers every page module on disk.
+    const pageFiles = require('fs')
+      .readdirSync(require('path').join(__dirname, '..', 'pages'))
+      .filter((name) => name.endsWith('.js'))
+    expect(data.order.length).toBe(pageFiles.length)
     expect(data.pages.pestsTopic).toBeTruthy()
     expect(data.order[0][0]).toBe('pestsTopic')
   })

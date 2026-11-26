@@ -418,7 +418,12 @@ describe('AI assist API (server.ts)', () => {
       // difference between a working button and no button.
       expect(body.tasks).toEqual(['content', 'rewrite-field'])
       expect(body.groundedBy).toContain('writing-and-style.md')
-      expect(body.pageCount).toBe(29)
+      // Derived from the page files on disk rather than hardcoded, so adding a
+      // page mockup does not break an AI-capabilities test.
+      const pageFiles = fs
+        .readdirSync(path.join(__dirname, '..', 'pages'))
+        .filter((name) => name.endsWith('.js'))
+      expect(body.pageCount).toBe(pageFiles.length)
       expect(body.disclosureRequired).toBe(true)
     })
 

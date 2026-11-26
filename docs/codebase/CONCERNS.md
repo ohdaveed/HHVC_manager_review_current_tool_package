@@ -57,13 +57,13 @@ Production TODO/FIXME/HACK scan: none found in production code (scan section).
 
 ### 6) `[ASK USER]` Questions
 
-1. [ASK USER] `README.md`, `js/main.js` and `order` now agree at **29** pages, so the drift is closed — should `tests/doc-counts.test.js` be extended to guard README so it stays that way?
+1. [ASK USER] `README.md` and `order` agree on the page count (34 as of 2026-11-26), but no test checks README — should `tests/doc-counts.test.js` be extended to guard it?
 2. [ASK USER] Is Railway the confirmed long-term host for `server.ts` sync/AI, or provisional documentation only?
 3. [ASK USER] Should Vite-bundled client libraries move from `devDependencies` to `dependencies` for clearer production inventory?
 4. [ASK USER] Railway now runs `server.ts` for manager demos — are the sync and AI endpoints meant to stay configured there, or to remain off for that audience?
 5. [ASK USER] Do you want a committed `.env.example` listing required/optional vars without secrets?
 6. [ASK USER] Should CI enforce a coverage threshold, or keep the current validate + explicit unit list + e2e gate?
-7. [ASK USER] Is **29** the stable page-set target for this review package, or are more consolidations/additions expected soon?
+7. [ASK USER] The page set grew from 29 to 34 on 2026-11-26 with five community-education Information pages — is 34 the stable target for this review package, or are more consolidations/additions expected soon?
 
 ### 7) Evidence
 

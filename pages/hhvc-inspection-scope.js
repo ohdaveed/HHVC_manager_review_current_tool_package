@@ -9,7 +9,7 @@ window.HHVC_PAGES['scopeInfo'] = {
     'This page is for anyone deciding whether to report a pest or housing health problem to HHVC.',
   ],
   reading: 'Grade 7',
-  seoTitle: 'Learn what HHVC can inspect',
+  seoTitle: 'Learn what HHVC can inspect | SF.gov',
   metaDescription: 'Check whether HHVC may review a pest, vector, or housing health condition.',
   sections: [
     {
@@ -79,7 +79,7 @@ window.HHVC_PAGES['scopeInfo'] = {
       kind: 'body',
       bullets: [
         {
-          text: 'Some housing problems are handled by other City programs. For example, structural water intrusion, leaks, and major heating or utility failures are routed to the [Department of Building Inspection (DBI)](#) under the San Francisco Housing Code (2025).',
+          text: 'Some housing problems are handled by other City programs. For example, structural water intrusion, leaks, and major heating or utility failures are routed to the [Department of Building Inspection (DBI)](https://www.sf.gov/report-residential-building-concern) under the San Francisco Housing Code (2025).',
           unverified: true,
           unverifiedReason:
             'The "San Francisco Housing Code (2025)" citation has zero tier-1 support (source-of-truth audit 2026-07-06, cross-cutting finding #1) — the DBI routing split looks intentional, but the statutory citation and "(2025)" edition tag trace only to tier-3 NotebookLM material. Source a real Housing Code citation or soften to "may be routed to DBI" before publication.',

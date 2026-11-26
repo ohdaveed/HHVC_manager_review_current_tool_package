@@ -29,7 +29,7 @@ window.HHVC_PAGES['rodentsReport'] = {
       },
       {
         label: 'Notify your landlord first',
-        text: 'If you rent, tell your landlord first and give them 72 hours to start fixing the problem, unless it is an urgent health or safety risk.',
+        text: 'If you rent, tell your landlord in writing first and give them 72 hours to start fixing the problem, unless it is an urgent health or safety risk.',
       },
     ],
   },
@@ -56,7 +56,7 @@ window.HHVC_PAGES['rodentsReport'] = {
         {
           title: 'Notify your landlord before reporting',
           bullets: [
-            '**Notify your landlord:** Tell the property owner or manager about the problem.',
+            '**Notify your landlord:** Tell the property owner or manager about the problem in writing, and keep a copy.',
             '**Give them 72 hours:** If they do not start fixing the problem within 3 days, report it to the City.',
             '**Urgent problems:** If there is a serious danger to health or safety, report it right away without waiting.',
           ],
@@ -122,7 +122,7 @@ window.HHVC_PAGES['rodentsReport'] = {
         'It may take us a few weekdays to get back to you. In the meantime, here are a few things you can do to help with the problem.',
       ],
       bullets: [
-        '**Close off entry points:** Seal any gap bigger than a pencil with rodent-proof materials like hardware cloth, copper mesh, or sheet metal.',
+        "**Close off entry points:** Sealing the building is your landlord's job. You can fill small gaps inside your home with steel wool or copper mesh, then caulk. Do not use spray foam.",
         '**Cut off food:** Store food and garbage in bins with tight-fitting lids. Do not leave pet food out overnight.',
         '**Remove hiding places:** Clear clutter and trim overgrown plants where rats, mice, and raccoons hide or nest.',
         '**Trap safely:** Use snap traps indoors. Do not use poisons — they can harm children, pets, and wildlife.',
@@ -132,38 +132,68 @@ window.HHVC_PAGES['rodentsReport'] = {
         {
           title: 'UC IPM Pest Notes: Rats',
           text: 'University of California guidance on identifying and managing rats.',
-          url: 'https://ipm.ucanr.edu/home-and-landscape/rats/pest-notes/',
+          url: 'https://ipm.ucanr.edu/home-and-landscape/rats/',
           karl: 'External link inside the supporting_information accordion. Third-party UC IPM reference in place of a City-maintained prevention page (manager directive: do not reinvent the wheel).',
         },
         {
           title: 'UC IPM Pest Notes: House mouse',
           text: 'University of California guidance on managing house mice.',
-          url: 'https://ipm.ucanr.edu/home-and-landscape/house-mouse/pest-notes/',
+          url: 'https://ipm.ucanr.edu/home-and-landscape/house-mouse/',
           karl: 'External link inside the supporting_information accordion. Third-party UC IPM reference.',
         },
         {
           title: 'UC IPM Pest Notes: Raccoons',
           text: 'University of California guidance on managing raccoons around buildings.',
-          url: 'https://ipm.ucanr.edu/home-and-landscape/raccoon/pest-notes/',
+          url: 'https://ipm.ucanr.edu/home-and-landscape/raccoons/',
           karl: 'External link inside the supporting_information accordion. Third-party UC IPM reference covering the raccoon scope folded into this page.',
         },
         {
-          title: 'CDC: Preventing rodent infestations',
+          title: 'UC IPM Pest Notes: Skunks',
+          text: 'University of California guidance on skunks around homes.',
+          url: 'https://ipm.ucanr.edu/home-and-landscape/skunks/',
+          karl: 'External link inside the supporting_information accordion. Third-party UC IPM reference.',
+        },
+        {
+          title: 'UC IPM Pest Notes: Tree squirrels',
+          text: 'University of California guidance on squirrels in attics and buildings.',
+          url: 'https://ipm.ucanr.edu/home-and-landscape/tree-squirrels/',
+          karl: 'External link inside the supporting_information accordion. Third-party UC IPM reference.',
+        },
+        {
+          title: 'UC IPM Pest Notes: Bats',
+          text: 'University of California guidance on keeping bats out of buildings.',
+          url: 'https://ipm.ucanr.edu/home-and-landscape/bats/',
+          karl: 'External link inside the supporting_information accordion. Third-party UC IPM reference.',
+        },
+        {
+          title: 'CDC: Preventing rabies from bats',
+          text: 'Federal guidance on bats in the home and what to do after contact.',
+          url: 'https://www.cdc.gov/rabies/prevention/bats.html',
+          karl: 'External link inside the supporting_information accordion. Third-party CDC (HHS) reference.',
+        },
+        {
+          title: 'CDC: Controlling wild rodent infestations',
           text: 'Federal guidance on keeping rodents out of your home.',
-          url: 'https://www.cdc.gov/rodents/prevention/index.html',
+          url: 'https://www.cdc.gov/healthy-pets/rodent-control/index.html',
           karl: 'External link inside the supporting_information accordion. Third-party CDC reference.',
+        },
+        {
+          title: 'CDC: How to clean up after rodents',
+          text: 'Federal steps for cleaning up droppings and nests without breathing in germs.',
+          url: 'https://www.cdc.gov/healthy-pets/rodent-control/clean-up.html',
+          karl: 'External link inside the supporting_information accordion. Third-party CDC (HHS) reference.',
         },
         {
           title: 'NEHA: Vector control resources',
           text: 'National Environmental Health Association vector control resources.',
-          url: 'https://www.neha.org/vector-control',
+          url: 'https://www.neha.org/vectors-pests',
           karl: 'External link inside the supporting_information accordion. Third-party NEHA reference.',
         },
       ],
     },
     {
       heading: 'Related pages',
-      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. 4 cards below = 4 related "Page" entries. All internal SF.gov pages — Karl Related is a page chooser and cannot hold external links.',
+      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. 5 cards below = 5 related "Page" entries. All internal SF.gov pages — Karl Related is a page chooser and cannot hold external links.',
       kind: 'placement',
       cards: [
         {
@@ -181,6 +211,10 @@ window.HHVC_PAGES['rodentsReport'] = {
         {
           title: 'Tenant rights when reporting housing conditions',
           target: 'tenantRights',
+        },
+        {
+          title: 'Keep rats and mice out of your home',
+          target: 'rodentsPrevention',
         },
       ],
     },

@@ -1311,12 +1311,33 @@ describe('renderCards / renderCardList: shared assembly does not change output',
     { title: 'With file badge', url: 'https://example.gov/doc.pdf', fileType: 'PDF' },
   ]
 
+  // Each Karl guide panel takes its id from a module-level counter in
+  // js/mockup/karl-tag-meta.js, so the raw number depends on how many guides
+  // every earlier test happened to render — including every test that walks
+  // the real page corpus. Snapshotting it pinned the corpus size and the test
+  // file order rather than the card markup: adding page mockups moved it from
+  // 284 to something else, and a different file order (CI's coverage run)
+  // moved it again. The ids are normalized before snapshotting so this block
+  // pins only what it says it pins. Whether the trigger and its panel still
+  // agree on an id is asserted separately below, against the raw output.
+  const stableGuideIds = (html) => html.replace(/karl-guide-\d+/g, 'karl-guide-N')
+
   test('renderCards output for a representative card set', () => {
-    expect(ctx.renderCards(CARDS)).toMatchSnapshot()
+    expect(stableGuideIds(ctx.renderCards(CARDS))).toMatchSnapshot()
   })
 
   test('renderResourcesList (wraps renderCardList) output for the same card set', () => {
-    expect(ctx.renderResourcesList(CARDS)).toMatchSnapshot()
+    expect(stableGuideIds(ctx.renderResourcesList(CARDS))).toMatchSnapshot()
+  })
+
+  test('each Karl guide trigger controls the panel rendered with it', () => {
+    const html = ctx.renderCards(CARDS)
+    const controls = [...html.matchAll(/aria-controls="(karl-guide-\d+)"/g)].map((m) => m[1])
+    const panels = [...html.matchAll(/<span id="(karl-guide-\d+)" class="karl-guide-panel"/g)].map(
+      (m) => m[1]
+    )
+    expect(controls.length).toBeGreaterThan(0)
+    expect(panels).toEqual(controls)
   })
 
   test('renderCards external link uses rel="noopener" (not noreferrer)', () => {
