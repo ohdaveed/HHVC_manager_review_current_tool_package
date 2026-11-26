@@ -147,6 +147,36 @@ window.HHVC_PAGES['insectsReport'] = {
           karl: 'External link inside the supporting_information accordion. Third-party UC IPM reference.',
         },
         {
+          title: 'UC IPM Pest Notes: Flies',
+          text: 'University of California guidance on house flies and where they breed.',
+          url: 'https://ipm.ucanr.edu/home-and-landscape/flies/',
+          karl: 'External link inside the supporting_information accordion. Third-party UC IPM reference.',
+        },
+        {
+          title: 'UC IPM Pest Notes: Yellowjackets and other social wasps',
+          text: 'University of California guidance on ground nests and wasp safety.',
+          url: 'https://ipm.ucanr.edu/home-and-landscape/yellowjackets-and-other-social-wasps/',
+          karl: 'External link inside the supporting_information accordion. Third-party UC IPM reference.',
+        },
+        {
+          title: 'UC IPM Pest Notes: Fleas',
+          text: 'University of California guidance on fleas in homes and on pets.',
+          url: 'https://ipm.ucanr.edu/home-and-landscape/fleas/',
+          karl: 'External link inside the supporting_information accordion. Third-party UC IPM reference.',
+        },
+        {
+          title: 'UC IPM Pest Notes: Itching and infestation',
+          text: 'University of California guidance on bird and rodent mites and other causes of bites and itching.',
+          url: 'https://ipm.ucanr.edu/home-and-landscape/itching-and-infestation-whats-attacking-me/',
+          karl: 'External link inside the supporting_information accordion. Third-party UC IPM reference.',
+        },
+        {
+          title: 'CDC: About bed bugs',
+          text: 'Federal guidance on bed bug bites and prevention.',
+          url: 'https://www.cdc.gov/bed-bugs/about/index.html',
+          karl: 'External link inside the supporting_information accordion. Third-party CDC (HHS) reference.',
+        },
+        {
           title: 'CDC: Preventing mosquito bites',
           text: 'Federal guidance on avoiding mosquito bites and mosquito-borne illness.',
           url: 'https://www.cdc.gov/mosquitoes/prevention/index.html',

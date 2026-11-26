@@ -73,8 +73,23 @@ window.HHVC_PAGES['article11Compliance'] = {
       ],
     },
     {
+      heading: 'Identify the pests in your log',
+      karl: "Maps to a fourth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. One source per pest named in the vermin-log bullet above (Owner/Operator Guidelines item 2), so an owner or manager can identify what they are logging. Each bullet carries a Link-tool External link folded into this block's rich text — the verified Information schema has no external-URL card. All links verified 200 on 2026-11-26.",
+      kind: 'placement',
+      paragraphs: [
+        'The University of California Statewide Integrated Pest Management Program (UC IPM) publishes a guide for each pest you must log.',
+      ],
+      bullets: [
+        '[Rats](https://ipm.ucanr.edu/home-and-landscape/rats/) and [house mice](https://ipm.ucanr.edu/home-and-landscape/house-mouse/)',
+        '[Fleas](https://ipm.ucanr.edu/home-and-landscape/fleas/) and [flies](https://ipm.ucanr.edu/home-and-landscape/flies/)',
+        '[Bed bugs](https://ipm.ucanr.edu/home-and-landscape/bed-bugs/) and [cockroaches](https://ipm.ucanr.edu/home-and-landscape/cockroaches/)',
+        '[Spiders](https://ipm.ucanr.edu/home-and-landscape/spiders/) and [yellowjackets and other wasps](https://ipm.ucanr.edu/home-and-landscape/yellowjackets-and-other-social-wasps/)',
+        '[Mosquitoes](https://ipm.ucanr.edu/home-and-landscape/mosquitoes/)',
+      ],
+    },
+    {
       heading: 'Legal authority',
-      karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the intro paragraph plus the bulleted list below, mirroring the citation pattern and municode URL already used in `health-code-article-11.js`\'s "Enforcement" section and Spotlight button.',
+      karl: 'Maps to a fifth Title and text block: Title = this heading, Text = the intro paragraph plus the bulleted list below, mirroring the citation pattern and municode URL already used in `health-code-article-11.js`\'s "Enforcement" section and Spotlight button.',
       kind: 'body',
       paragraphs: ['Article 11 defines these requirements and how HHVC enforces them.'],
       bullets: [

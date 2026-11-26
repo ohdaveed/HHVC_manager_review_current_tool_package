@@ -54,7 +54,7 @@ window.HHVC_PAGES['bedBugsInfo'] = {
       kind: 'body',
       paragraphs: [
         'Bites alone cannot tell you it is bed bugs. Bites from fleas, mosquitoes, and bed bugs look alike. The only way to know is to find the bugs or their signs.',
-        'Most bed bugs hide in or near the bed. Start with the bed. Use a flashlight to check the mattress seams and the bed frame. Then check nearby furniture and cracks along the walls.',
+        'Most bed bugs hide in or near the bed, so check there first. Use a flashlight on the mattress seams and bed frame, then check nearby furniture and cracks along the walls.',
       ],
       bullets: [
         '**Small dark spots** on sheets or the mattress. These are bed bug droppings.',
@@ -132,6 +132,7 @@ window.HHVC_PAGES['bedBugsInfo'] = {
       ],
       bullets: [
         '[UC IPM: Bed bugs](https://ipm.ucanr.edu/home-and-landscape/bed-bugs/). How to identify, find, and control bed bugs.',
+        '[CDC: About bed bugs](https://www.cdc.gov/bed-bugs/about/index.html). Bites, health risks, and prevention.',
         '[UC IPM: Hiring a pest control company](https://ipm.ucanr.edu/home-and-landscape/hiring-a-pest-control-company/). Questions to ask before you hire.',
         '[UC IPM: Recursos en español](https://ipm.ucanr.edu/IPMPROJECT/recursos-espanol.html). Guías sobre plagas en español.',
       ],

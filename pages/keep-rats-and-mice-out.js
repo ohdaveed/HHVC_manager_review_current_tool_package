@@ -111,6 +111,7 @@ window.HHVC_PAGES['rodentsPrevention'] = {
       bullets: [
         '[UC IPM: Rats](https://ipm.ucanr.edu/home-and-landscape/rats/). Signs, prevention, and trapping.',
         '[UC IPM: House mouse](https://ipm.ucanr.edu/home-and-landscape/house-mouse/). How to keep mice out of buildings.',
+        '[CDC: How to clean up after rodents](https://www.cdc.gov/healthy-pets/rodent-control/clean-up.html). Step-by-step cleanup that keeps germs out of the air.',
         '[UC IPM: Recursos en español](https://ipm.ucanr.edu/IPMPROJECT/recursos-espanol.html). Guías sobre plagas en español.',
       ],
     },

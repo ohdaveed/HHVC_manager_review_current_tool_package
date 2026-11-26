@@ -102,6 +102,7 @@ window.HHVC_PAGES['reduceMoisture'] = {
         'Damp homes also attract pests that need water to survive. These guides explain how to spot and prevent them.',
       ],
       bullets: [
+        '[CDC: Mold](https://www.cdc.gov/mold-health/about/index.html). How mold affects health.',
         '[EPA: A brief guide to mold, moisture, and your home](https://www.epa.gov/mold/brief-guide-mold-moisture-and-your-home)',
         '[UC IPM: Cockroaches](https://ipm.ucanr.edu/home-and-landscape/cockroaches/). Leaks and damp areas give cockroaches water.',
         '[UC IPM: Moth or drain flies](https://ipm.ucanr.edu/home-and-landscape/moth-or-drain-flies/). Small flies that breed in wet, slimy drains.',

@@ -71,7 +71,7 @@ window.HHVC_PAGES['ownerGuidance'] = {
         {
           title: 'SF Environment: Pestec IPM guidelines for multifamily housing',
           text: 'SF-local operations manual for multi-unit buildings — turnover proofing, resident toolkit gap sizes, and sample IPM plans.',
-          url: 'https://sfenvironment.org/article/integrated-pest-management-ipm-guidelines-for-multifamily-housing',
+          url: 'https://www.sfenvironment.org/integrated-pest-management-multifamily-housing',
           karl: 'Body external link: SF Environment Pestec multifamily IPM guidelines (supplemental)',
         },
       ],
