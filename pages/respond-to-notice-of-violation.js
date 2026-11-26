@@ -114,7 +114,7 @@ window.HHVC_PAGES['noticeOfViolation'] = {
       url: 'https://www.sf.gov/departments--department-public-health--environmental-health',
     },
   ],
-  seoTitle: 'Fix your Healthy Housing and Vector Control violation | SF.gov',
+  seoTitle: 'Fix a Healthy Housing violation | SF.gov',
   metaDescription:
     'Follow a Healthy Housing and Vector Control Notice of Violation to correct housing or pest conditions.',
 }

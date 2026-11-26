@@ -75,7 +75,7 @@ window.HHVC_PAGES['inspectionPrepFollowup'] = {
             '[What happens after you report a housing or pest problem](afterReport)',
             "[Prepare for your DPH Director's Hearing](https://www.sf.gov/prepare-your-dph-directors-hearing)",
           ],
-          karl: "what_to_do -> Section. Section title: \"If something is still not fixed\". Section specifics: one Text block (paragraph plus its bullet). Links forward to afterReport's enforcement chain rather than restating its unverified fee/hearing figures. The Director's Hearing mention matches noticeOfViolation's Step 5, and the External link is the live SF.gov DPH Environmental Health hearing-rules page (checked 2026-11-26).",
+          karl: "what_to_do -> Section. Section title: \"If something is still not fixed\". Section specifics: one Text block (paragraph plus its two bullets: an internal link to afterReport and an External link to the DPH Director's Hearing page). Links forward to afterReport's enforcement chain rather than restating its unverified fee/hearing figures. The Director's Hearing mention matches noticeOfViolation's Step 5, and the External link is the live SF.gov DPH Environmental Health hearing-rules page (checked 2026-11-26).",
         },
       ],
     },

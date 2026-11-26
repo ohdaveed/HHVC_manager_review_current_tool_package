@@ -8,7 +8,7 @@ window.HHVC_PAGES['cockroachesPrevention'] = {
   audience: [
     'This page is for tenants and residents dealing with cockroaches, especially in apartment buildings.',
   ],
-  reading: 'Grade 6',
+  reading: 'Grade 4–6',
   editorStatus: 'needs-review',
   editorNote:
     'New community-education Information page. Sources: UC IPM Pest Notes: Cockroaches (rev. December 2019) — asthma risk in multi-unit housing, sprays repel and disperse cockroaches, sanitation, sticky-trap monitoring, bait placement; and the SF Environment / Pestec IPM Guidelines for Multifamily Housing (prohibit over-the-counter sprays, foggers, and bug bombs; seal cockroach gaps of 1/8 inch). Gives the ipmEducation Campaign page something to point residents to. UC IPM links verified 200 on 2026-11-26.',

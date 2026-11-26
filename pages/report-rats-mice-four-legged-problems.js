@@ -29,7 +29,7 @@ window.HHVC_PAGES['rodentsReport'] = {
       },
       {
         label: 'Notify your landlord first',
-        text: 'If you rent, tell your landlord first and give them 72 hours to start fixing the problem, unless it is an urgent health or safety risk.',
+        text: 'If you rent, tell your landlord in writing first and give them 72 hours to start fixing the problem, unless it is an urgent health or safety risk.',
       },
     ],
   },
@@ -56,7 +56,7 @@ window.HHVC_PAGES['rodentsReport'] = {
         {
           title: 'Notify your landlord before reporting',
           bullets: [
-            '**Notify your landlord:** Tell the property owner or manager about the problem.',
+            '**Notify your landlord:** Tell the property owner or manager about the problem in writing, and keep a copy.',
             '**Give them 72 hours:** If they do not start fixing the problem within 3 days, report it to the City.',
             '**Urgent problems:** If there is a serious danger to health or safety, report it right away without waiting.',
           ],
@@ -122,7 +122,7 @@ window.HHVC_PAGES['rodentsReport'] = {
         'It may take us a few weekdays to get back to you. In the meantime, here are a few things you can do to help with the problem.',
       ],
       bullets: [
-        '**Close off entry points:** Seal any gap bigger than a pencil with rodent-proof materials like hardware cloth, copper mesh, or sheet metal. Do not use spray foam.',
+        "**Close off entry points:** Sealing the building is your landlord's job. You can fill small gaps inside your home with steel wool or copper mesh, then caulk. Do not use spray foam.",
         '**Cut off food:** Store food and garbage in bins with tight-fitting lids. Do not leave pet food out overnight.',
         '**Remove hiding places:** Clear clutter and trim overgrown plants where rats, mice, and raccoons hide or nest.',
         '**Trap safely:** Use snap traps indoors. Do not use poisons — they can harm children, pets, and wildlife.',

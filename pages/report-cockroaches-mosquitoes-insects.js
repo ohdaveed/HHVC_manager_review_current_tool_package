@@ -53,7 +53,7 @@ window.HHVC_PAGES['insectsReport'] = {
         {
           title: 'Notify your landlord before reporting',
           bullets: [
-            '**Notify your landlord:** Tell the property owner or manager about the insects. For bed bugs, owners must investigate complaints promptly and coordinate treatment.',
+            '**Notify your landlord:** Tell the property owner or manager about the insects in writing, and keep a copy. For bed bugs, owners must investigate complaints promptly and coordinate treatment.',
             '**Give them 72 hours:** If they do not start fixing the problem within 3 days, report it to the City.',
             '**Urgent problems:** If there is a serious danger to health or safety, report it right away without waiting.',
           ],
@@ -122,7 +122,7 @@ window.HHVC_PAGES['insectsReport'] = {
       ],
       bullets: [
         '**Cockroaches:** Clean up crumbs and grease, fix dripping faucets and leaks, and seal cracks near pipes. Use bait stations instead of sprays.',
-        '**Bed bugs:** Do not throw out furniture before treatment — it can spread the bugs. Wash and dry bedding on high heat, and tell your landlord right away.',
+        '**Bed bugs:** Do not throw out furniture before treatment — it can spread the bugs. Wash bedding and dry it on high heat for at least 45 minutes, and tell your landlord right away.',
         '**Mosquitoes:** Dump standing water at least once a week — buckets, planters, saucers, and clogged gutters. Fix holes in window screens.',
         '**Flies:** Bag garbage tightly and keep bin lids closed so flies cannot breed in it.',
         '**Wasps:** Do not disturb a ground nest — mark the spot and keep people and pets away until it is treated.',

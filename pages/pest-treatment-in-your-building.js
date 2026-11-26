@@ -8,7 +8,7 @@ window.HHVC_PAGES['pestTreatmentInfo'] = {
   audience: [
     'This page is for tenants and residents whose building is being treated for pests, and the owners and managers who arrange treatment.',
   ],
-  reading: 'Grade 6',
+  reading: 'Grade 4–6',
   editorStatus: 'needs-review',
   editorNote:
     "New community-education Information page connecting the tenant and owner sides of a treatment. Sources: Residential Building Owner/Operator Guidelines for Vector Control (Director's Rules excerpt: owner investigates within 72 hours, keeps a pest logbook for the PCO, hires a licensed PCO, gives advance notice naming the product and the Poison Control number; tenant housekeeping duty); SFDPH bed bug tenant guidelines (grant entry on notice, follow the PCO checklist, request help); UC IPM Pest Notes: Hiring a Pest Control Company and Understanding Pesticides; Pestec multifamily IPM guide (pesticides as a last resort). Poison Control number 1-800-222-1222 is the national line — confirm HHVC wants it printed. UC IPM and Structural Pest Control Board links verified 200 on 2026-11-26.",

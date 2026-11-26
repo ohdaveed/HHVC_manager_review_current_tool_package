@@ -81,13 +81,13 @@ window.HHVC_PAGES['tenantRights'] = {
         {
           title: 'SF Rent Board',
           text: 'Get information about tenant rights, landlord rules, and rent-related questions.',
-          url: 'https://www.sf.gov/departments/rent-board',
+          url: 'https://www.sf.gov/departments--rent-board',
           karl: 'Maps to a Link-tool "External link" inside the Title and text block\'s rich text above (link text = this card\'s title, target = the sf.gov/departments/rent-board URL) — External link is a confirmed Link-tool type, not a gap like the page-only Related field.',
         },
         {
           title: 'Get tenant help',
           text: 'Use tenant support resources if you are worried about retaliation or eviction.',
-          url: 'https://www.sf.gov/topics/housing',
+          url: 'https://www.sf.gov/topics--housing',
           karl: 'Maps to a Link-tool "External link" inside the same Title and text block\'s rich text (link text = this card\'s title, target = the URL below) — External link is a confirmed Link-tool type. Verify the final SF.gov destination before publication.',
         },
       ],

@@ -52,7 +52,9 @@ window.HHVC_PAGES['filthReport'] = {
         },
         {
           title: 'If you rent, give 72 hours when possible',
-          text: ['Tell the property owner or manager about the condition.'],
+          text: [
+            'Tell the property owner or manager about the condition in writing, and keep a copy.',
+          ],
           bullets: [
             'If they do not respond or start fixing it within 72 hours, submit your report right away so it can be assigned for review.',
             'Do not wait 72 hours if there is an urgent health or safety concern.',

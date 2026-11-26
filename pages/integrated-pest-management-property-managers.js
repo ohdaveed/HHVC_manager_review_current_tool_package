@@ -182,7 +182,7 @@ window.HHVC_PAGES['ownerGuidance'] = {
         'Use translated materials to share simple food storage, garbage, and clutter prevention steps.',
         'Introduce new residents to IPM and their housekeeping responsibilities at move-in.',
         'Work with home health aides, translators, nonprofits, and faith groups who already help residents. They can help residents prepare units for treatment.',
-        '[SF Environment: Chousing a pest control company](https://www.sfenvironment.org/choosing-pest-control-company)',
+        '[SF Environment: Choosing a pest control company](https://www.sfenvironment.org/choosing-pest-control-company)',
       ],
     },
     {

@@ -114,7 +114,7 @@ import './core/third-party-globals.js'
 // ---------------------------------------------------------------------------
 // Core modules, in dependency order.
 //
-// js/core/page-data.js imports all 29 pages/*.js files (each registering itself
+// js/core/page-data.js imports every pages/*.js file (each registering itself
 // onto window.HHVC_PAGES) and then assembles window.HHVC_DATA. js/core/state.js
 // reaches it through js/core/page-registry.js, which imports it first, so the
 // ordering is already guaranteed by the module graph; listing these here as

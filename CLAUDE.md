@@ -953,7 +953,7 @@ a "Page facts" subheading, and the scored list orders **failures first**.
 carries `severity` plus a `source`/`section` pair and a ready-to-render
 `citation`. `severity: 'error'` mandates join the scored rule list behind the
 "checks passed" ratio and render their citation on the Checks tab;
-`severity: 'warning'` findings are advisory, run to ~145 across the 34 pages,
+`severity: 'warning'` findings are advisory, run to ~155 across the 34 pages,
 and render separately so they cannot swamp the ratio. A scored rule must always
 be pushed, pass or fail — dropping one shrinks the denominator and flatters the
 thinnest pages. `source` exists because not every rule comes from the manual:

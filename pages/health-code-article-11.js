@@ -9,7 +9,7 @@ window.HHVC_PAGES['article11Guide'] = {
   reading: 'Grade 7',
   reportDate: 'August 7, 2026',
   editorStatus: 'needs-review',
-  seoTitle: 'Health Code Article 11 in plain language',
+  seoTitle: 'Health Code Article 11 in plain language | SF.gov',
   metaDescription:
     'Plain-language explanations of San Francisco Health Code Article 11 rules for garbage, pests, mold, rodents, and other public health nuisances.',
   editorNote:

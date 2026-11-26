@@ -381,7 +381,7 @@ describe('findBrokenInlineLinks', () => {
   // what these add is coverage of the CALLER, because extracting the rule
   // changed exactly one thing here — targets are now trimmed before testing —
   // and a corpus that happens to carry no padded target cannot show that.
-  // `bun run validate` passing is evidence about the 29 real pages, not about
+  // `bun run validate` passing is evidence about the real pages, not about
   // the rule, and this function also runs inside the AI output validator,
   // where the input is a model-generated draft rather than reviewed copy.
   test('does not report a URL target padded with whitespace', () => {

@@ -8,7 +8,7 @@ window.HHVC_PAGES['reduceMoisture'] = {
   audience: [
     'This page is for tenants, and the owners and managers of their buildings, who want to prevent or clean up mold.',
   ],
-  reading: 'Grade 6',
+  reading: 'Grade 4–6',
   editorStatus: 'needs-review',
   editorNote:
     'New community-education Information page, planned in the source register as `reduceMoisture` (Phase 2 Information; docs/source/hhvc-policy/2026-07-02-mold-moisture-guidance.md and 2026-07-02-mold-tenants-landlords-guidance.md). The two SFDPH sources disagree slightly on the humidity target (below 55%, ideally 40-50%, versus below about 40-50%) and on furniture spacing (6 inches); this page uses "below 50%" and 6 inches — confirm with HHVC. UC ANR publishes no indoor-mold guidance (searched 2026-11-26), so the UC IPM links here cover pests that thrive in damp homes, and the general mold link is EPA. All external links verified 200 on 2026-11-26.',
@@ -91,7 +91,7 @@ window.HHVC_PAGES['reduceMoisture'] = {
             'The 10 sq ft action threshold is from internal SFDPH program guidance (2026-07-02-mold-moisture-guidance.md), not a cited Health Code section. Confirm HHVC wants this number published.',
         },
         '**The City cannot help** with mold on personal items like furniture or clothing.',
-        '[Report garbage, filth, mold, and overgrown vegetation](filthReport)',
+        '[Report garbage, filth, and overgrown vegetation](filthReport)',
       ],
     },
     {

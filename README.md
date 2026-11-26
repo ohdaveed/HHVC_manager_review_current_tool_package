@@ -28,14 +28,12 @@ invariants, tests, and saved review state stay stable. `build_scripts/validate.j
 
 The Agency page routes users into scannable service groups:
 
-1. Report a problem now
-2. What we do
-3. Report and pay
-4. Get help and know your rights
-5. For property owners and managers
-6. Mosquito and vector programs
-7. Learn about pests from trusted sources
-8. About Healthy Housing and Vector Control
+1. Get help with pests, mold, or trash
+2. If you rent
+3. If you own or manage a building
+4. Look up records and rules
+5. Need another City housing service?
+6. About Healthy Housing and Vector Control
 
 Retired page keys (from the consolidation) are mapped to their replacement pages in
 `window.HHVC_DELETED_PAGE_ALIASES` in `js/core/page-data.js`, so old shared `?page=<key>` links
@@ -340,20 +338,28 @@ Keep **dashboard UX changes** (layout, queue, workspace tabs, review helpers) an
 These are the open SME/legal items carried on the live pages (as `editorStatus`, `editorNote`,
 and `unverified` fields in `pages/*.js` — grep for them to see the full detail):
 
-- `noticeOfViolation` is `editorStatus: 'blocked'` — NOV templates, appeal windows, contact
-  routes, and free-visit sequencing still need SME/legal confirmation.
+- `noticeOfViolation` is `editorStatus: 'needs-review'` — NOV templates, appeal windows, contact
+  routes, and free-visit sequencing still need SME/legal confirmation. Its Director's Hearing
+  guidance covers only the DPH Environmental Health hearing.
 - `findHotelRecords` is `editorStatus: 'placeholder'` — the lookup CTA points at an interim
   sfdph.org URL until the real entry point is confirmed.
 - `mosquitoWorkshop` is `editorStatus: 'placeholder'` — workshop capacity, lead time, and the
   request-form intake backend are illustrative; it carries `unverified` flags on those claims.
-- `payFee` has no real payment URL yet — its primary CTA is an inert button until the client
-  confirms the SF.gov payment destination.
+- `payFee` links the PaySF Healthy Housing fee service
+  (`https://services.paysf.co/service/healthy-housing-fee`); confirm it is the intended payment
+  destination before publication.
 - `ownerHub` links the FY25–26 fee schedule PDF; do not treat as final until the FY26–27
   public URL is confirmed.
 - `ownerGuidance` should use “rodent-proof materials” as the enforceable concept. Examples may include steel wool backed by sealant, hardware cloth, copper mesh, sheet metal, mortar, concrete, or other durable materials.
 - The dead-bird reporting flag (inherited from the retired `wnvBirdReport` page) now rides on
   the `insectsReport`/`mosquitoControl`/`mosquitoWorkshop` cluster: the HHVC/CDPH dead bird
   collection workflow, pickup criteria, and seasonal details are still unconfirmed.
+- `bedBugsInfo`, `reduceMoisture`, `rodentsPrevention`, `cockroachesPrevention`, and
+  `pestTreatmentInfo` are `editorStatus: 'needs-review'` — owner duties drawn from the Director's
+  Rules carry `unverified` flags to confirm against the v4 draft, and the current location of the
+  bed bug Director's Rules PDF is unconfirmed. Choices HHVC made on 2026-11-26 (45-minute dryer
+  time, 4-week bed bug monitoring, owner-led sealing, no spray foam) are recorded in the affected
+  sections' `karl` notes.
 - Legal/source review is required for pages that cite Article 11, fees, notices of violation, enforcement, pesticide notification, or inspection requirements.
 
 ## Automation note

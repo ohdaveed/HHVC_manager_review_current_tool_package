@@ -8,7 +8,7 @@ window.HHVC_PAGES['rodentsPrevention'] = {
   audience: [
     'This page is for tenants and residents who want to prevent rats and mice, or are dealing with them now.',
   ],
-  reading: 'Grade 6',
+  reading: 'Grade 4–6',
   editorStatus: 'needs-review',
   editorNote:
     'New community-education Information page: the renter-facing companion to ownerGuidance. Sources: UC IPM Pest Notes: Rats (rev. June 2024) and House Mouse (rev. July 2025); the Residential Building Owner/Operator Guidelines for Vector Control (owner 72-hour investigation, licensed PCO, rodent-proof garbage containers; tenant housekeeping duty); and the renter rodent playbook notes, using only the items those notes mark "safe to adopt" (written notice, 72-hour wait). The playbook\'s repair-and-deduct and retaliation-window items are deliberately left out per those notes. Cleanup and trapping wording matches rodentsReport\'s "While you wait" tips. UC IPM links verified 200 on 2026-11-26.',
@@ -67,7 +67,7 @@ window.HHVC_PAGES['rodentsPrevention'] = {
       karl: 'Maps to a fifth Title and text block: Title = this heading, Text = the two paragraphs plus the bulleted list below. Gap sizes are UC IPM (rats and mice: seal holes larger than 1/4 inch). Sealing split (owners responsible; tenants may fill small gaps) and the no-foam rule are an HHVC decision 2026-11-26; steel wool or copper mesh then caulk follows the Pestec multifamily guide (Appendix F). The Callout below is its own Callout stream item.',
       kind: 'body',
       paragraphs: [
-        'A mouse can squeeze through a hole about the size of a pencil. Rats and mice get in around pipes, vents, and gaps under doors.',
+        'A mouse can squeeze through a hole about the size of a pencil (about 1/4 inch). Rats and mice get in around pipes, vents, and gaps under doors.',
         "In a rental, sealing the building is the owner's responsibility. Holes should be closed with metal, concrete, or steel wool covered with caulk, because rats and mice chew through foam, rubber, plastic, and wood.",
       ],
       bullets: [

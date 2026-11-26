@@ -8,7 +8,7 @@ window.HHVC_PAGES['bedBugsInfo'] = {
   audience: [
     'This page is for tenants, residents of SROs and shelters, and property owners and managers dealing with bed bugs.',
   ],
-  reading: 'Grade 6',
+  reading: 'Grade 4–6',
   editorStatus: 'needs-review',
   editorNote:
     "New community-education Information page, planned in the source register as `bedBugsInfo` (docs/source/hhvc-policy/2026-07-02-bed-bug-directors-rules-tenant-guidelines.md, \"Phase used\"). Sources: SFDPH Tenant Guidelines for Unit Preparation Prior to Bed Bug Treatment (Director's Rules sections Tenant 3.1-3.4, Owner 3.3-3.5), UC IPM Pest Notes: Bed Bugs (2013), and the owner 72-hour investigation rule in the Residential Building Owner/Operator Guidelines for Vector Control. The Director's Rules PDF URL cited in the tenant guidelines (sfdph.org/.../BedBugRegs_070112.pdf) now redirects to the DPH home page, so it is not linked here — confirm the current published location, and whether the v4 Director's Rules draft changes any duty below, before publication. UC IPM link verified 200 on 2026-11-26.",
@@ -75,20 +75,20 @@ window.HHVC_PAGES['bedBugsInfo'] = {
       ],
       bullets: [
         {
-          text: '**Owners must look into it.** Your landlord must investigate a report of bed bugs within 72 hours and hire a licensed pest control company.',
+          text: '**Owners must act fast.** Within 2 working days of your report, your landlord must hire a licensed pest control company to inspect your unit and the units next to it.',
           unverified: true,
           unverifiedReason:
-            "From the Residential Building Owner/Operator Guidelines for Vector Control (Director's Rules excerpt, items 2-3). Confirm these duties still read the same in the v4 Director's Rules draft before publication.",
+            "From the SFDPH bed bug Director's Rules, Owner 2.4-2.6 (docs/source/hhvc-policy/2026-07-02-bed-bug-directors-rules-tenant-guidelines.md): within two working days of the tenant's complaint, contract a PCO to inspect the unit and adjacent units. This is the bed bug timeline, distinct from the general 72-hour owner investigation (see the v4 gap analysis, 'Three distinct timelines'). Confirm it still reads the same in the v4 Director's Rules draft before publication.",
         },
         '**Do not throw furniture away yet.** Moving infested items can spread bed bugs to other units. Wait until the pest control company tells you what to do.',
         '**Label anything you throw out.** Seal it in plastic and mark it "infested with bed bugs" so no one takes it home.',
         '**Do not use bug bombs or foggers.** They do not kill bed bugs hiding in cracks, and they can push bugs into other rooms.',
-        '**Report it to the City** if your landlord does not start fixing the problem within 72 hours. [Report cockroaches, bed bugs, and other insects](insectsReport)',
+        '**Report it to the City** if your landlord does not start fixing the problem within 72 hours. [Report cockroaches, mosquitoes, and other insects](insectsReport)',
       ],
     },
     {
       heading: 'What tenants need to do before treatment',
-      karl: "Maps to a sixth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. Paraphrases SFDPH Tenant Guidelines for Unit Preparation Prior to Bed Bug Treatment (Director's Rules Tenant 3.1-3.4). Dryer time is 45 minutes by HHVC decision 2026-11-26, following SF Environment's 2024 'Pest management in your home' handout; the 2012-era Director's Rules Tenant 3.4 states 30 minutes as the minimum. The 4-week monitoring bullet is also an HHVC decision 2026-11-26. The Callout below is its own Callout stream item.",
+      karl: "Maps to a sixth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. Paraphrases SFDPH Tenant Guidelines for Unit Preparation Prior to Bed Bug Treatment (Director's Rules Tenant 3.1-3.4). Dryer time is 45 minutes by HHVC decision 2026-11-26, following SF Environment's 2024 'Pest management in your home' handout; the 2012-era Director's Rules Tenant 3.4 states 30 minutes as the minimum. The 4-week monitoring bullet is also an HHVC decision 2026-11-26, consistent with bed bug Director's Rules Owner 6.1 (monitoring devices used for at least four weeks). The Callout below is its own Callout stream item.",
       kind: 'body',
       paragraphs: [
         'Treatment only works if the unit is ready. The pest control company will give you a checklist. If it is different from the list below, follow their checklist.',
@@ -109,7 +109,7 @@ window.HHVC_PAGES['bedBugsInfo'] = {
     },
     {
       heading: 'What owners and managers need to do',
-      karl: "Maps to a seventh Title and text block: Title = this heading, Text = the bulleted list below. Paraphrases Director's Rules Owner 3.3-3.5 as quoted in the SFDPH tenant guidelines. The 4-week monitoring bullet is an HHVC decision 2026-11-26 (an SF Environment relocation guideline attributes a 4-week post-treatment monitoring requirement to SF DPH regulations).",
+      karl: "Maps to a seventh Title and text block: Title = this heading, Text = the bulleted list below. Paraphrases Director's Rules Owner 3.3-3.5 as quoted in the SFDPH tenant guidelines. The 4-week monitoring bullet is an HHVC decision 2026-11-26, and matches bed bug Director's Rules Owner 6.1 (monitoring devices used for at least four weeks to confirm effective treatment).",
       kind: 'body',
       bullets: [
         '**Give tenants sealable plastic bags** for clothing before and after it is washed.',

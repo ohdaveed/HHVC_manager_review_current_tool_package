@@ -24,7 +24,7 @@ index.html -> js/main.js (CSS + modules)
 ```
 
 1. Vite bundles `js/main.js` and CSS into `dist/` (or single-file HTML).
-2. Each `pages/*.js` assigns a page object onto `window.HHVC_PAGES`; `js/core/page-data.js` sets `order` (29 entries) and deleted-key aliases.
+2. Each `pages/*.js` assigns a page object onto `window.HHVC_PAGES`; `js/core/page-data.js` sets `order` (one entry per page) and deleted-key aliases.
 3. Core modules render the mockup and wire editor/sidebar controls from in-memory `pageData`.
 4. Review layers persist decisions/notes/edits in versioned `localStorage`; continuous autosave skips history; round boundaries go through `mergeReviewRecord`.
 5. If configured, the browser sync client pushes/pulls per-page records through `server.ts` into whichever store `build_scripts/storage.js` selects — Postgres when `DATABASE_URL` is set, SQLite otherwise; AI panel posts drafts to `/api/ai/generate` (validated, never written to disk as pages).
