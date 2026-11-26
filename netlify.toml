@@ -4,21 +4,17 @@
 # The optional /api/review-state sync backend has no runtime here, so a Netlify
 # deploy is read-only/no-sync by design.
 #
-# **Netlify is no longer the deploy reviewers open — Railway is** (2026-08-14).
-# See "Deploying" in AGENTS.md and `railway.json`. Railway runs `server.ts`, so
-# the same build ALSO gets the optional sync and AI-assist APIs a static host
-# structurally cannot serve; those still fail closed until they are configured.
+# **Netlify is the default deploy again** (2026-11-26, https://hhvc.netlify.app).
+# Builds were switched off on 2026-08-14 (#129) when Railway became the live
+# host, via an `ignore = "exit 0"` line in [build]. Railway stopped serving on
+# 2026-10-09 (its last GitHub deployment record went inactive with no
+# successor, and the URL now answers "Application not found"), so Netlify was
+# left serving the 2026-08-14 build of 38d152c while main moved on. Removing
+# that line turns Netlify builds on for every push to main again.
 #
-# This file is kept rather than deleted, because it is the only record of how
-# the static build is assembled and of two plugin traps that cost real deploys
-# (see the long note below). `build.ignore` below is what actually stops
-# Netlify building — remove that one line to turn it back on.
+# Netlify is static only: the optional sync and AI-assist APIs in `server.ts`
+# have no runtime here, so they stay off, which the tool is built to handle.
 [build]
-  # `ignore` is Netlify's "should I build?" hook: exit 0 means SKIP. Builds are
-  # off rather than the site being deleted, so the last known-good deploy stays
-  # reachable while Railway is the live one — and so a stale second copy of the
-  # tool can never silently diverge from main behind a URL someone bookmarked.
-  ignore = "exit 0"
 
   # Bun, not npm. This said `npm run build:netlify` — the script's former name,
   # renamed to `build:railway` once Railway became the host — while the comment
