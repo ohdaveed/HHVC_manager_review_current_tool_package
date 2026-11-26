@@ -44,7 +44,7 @@ window.HHVC_PAGES['article11Compliance'] = {
     },
     {
       heading: 'If you get a report or notice',
-      karl: 'Maps to a second Title and text block: Title = this heading, Text = the two paragraphs plus the two-item linked bullet list below. 72-hour figure and NOV description verified against `article11Guide` and `respond-to-notice-of-violation.js` (`noticeOfViolation`).',
+      karl: 'Maps to a second Title and text block: Title = this heading, Text = the two paragraphs plus the four-item linked bullet list below (two internal links; two External links to live SF.gov pages checked 2026-11-26: the DPH Director’s Hearing rules page and DBI’s building-code violation page, the latter an interagency routing pointer only). 72-hour figure and NOV description verified against `article11Guide` and `respond-to-notice-of-violation.js` (`noticeOfViolation`).',
       kind: 'body',
       paragraphs: [
         'When a tenant reports a pest or housing health problem, owners and managers must start investigating within 72 hours.',
@@ -53,6 +53,8 @@ window.HHVC_PAGES['article11Compliance'] = {
       bullets: [
         '[Fix your Healthy Housing and Vector Control violation](noticeOfViolation)',
         '[What happens after you report](afterReport)',
+        "[Prepare for your DPH Director's Hearing](https://www.sf.gov/prepare-your-dph-directors-hearing)",
+        'Notice from the Department of Building Inspection instead? [Fix your building and housing code violation](https://www.sf.gov/step-by-step--fix-your-building-and-housing-code-violation)',
       ],
     },
     {

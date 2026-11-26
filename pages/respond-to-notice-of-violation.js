@@ -46,7 +46,10 @@ window.HHVC_PAGES['noticeOfViolation'] = {
             'Read the full notice as soon as you receive it. It identifies the conditions that must be corrected and gives a deadline for completing the work.',
             'Check which actions apply to the building, shared areas, or a specific unit. A notice may list actions for an owner, manager, tenant, or more than one responsible party.',
           ],
-          karl: 'what_to_do -> Section. Section title: "Read your Notice of Violation". Section specifics: one Text block holding both paragraphs. This is first because the notice controls the scope and deadline for the specific case.',
+          bullets: [
+            "**Check which department sent it.** This page is for notices from Healthy Housing and Vector Control, part of the Department of Public Health. Notices about building and housing code problems, like heat, plumbing, or structural repairs, come from the Department of Building Inspection (DBI) and follow DBI's own process. [Fix your building and housing code violation](https://www.sf.gov/step-by-step--fix-your-building-and-housing-code-violation)",
+          ],
+          karl: 'what_to_do -> Section. Section title: "Read your Notice of Violation". Section specifics: one Text block holding both paragraphs plus the bullet. This is first because the notice controls the scope and deadline for the specific case. The bullet is an interagency routing pointer only, carried as a Link-tool External link to DBI\'s own live Transaction page (checked 2026-11-26); it adds no DBI requirement to this HHVC flow, per the editorNote rule.',
         },
         {
           title: 'Make a plan to correct the conditions',
@@ -91,7 +94,14 @@ window.HHVC_PAGES['noticeOfViolation'] = {
             'If the violation is not corrected, HHVC may take additional enforcement action. This can include a reinspection fee when applicable, a citation, or a Director’s Hearing.',
             'Follow the instructions and deadlines in any later notice you receive.',
           ],
-          karl: 'what_to_do -> Section. Section title: "Finish the work or respond to further enforcement". Section specifics: one Text block holding both paragraphs. This uses the Article 11 Interpretation Guide’s high-level enforcement workflow only; it intentionally omits unverified fee timing, hearing, appeal, and abatement details.',
+          bullets: [
+            "**If your case goes to a Director's Hearing,** you will get a notice with the date and time. Department of Public Health hearings are usually held on the third Thursday of each month at 1 pm, at 49 South Van Ness Avenue, Room 192/194, and are open to the public.",
+            '**You can send written materials before the hearing.** Send them to the Hearing Clerk at least one week ahead. Photos and other exhibits are allowed.',
+            '**Ask for an interpreter at least 2 weeks before the hearing.** Email EHBHearings@sfdph.org or call 415-252-3800.',
+            "[Prepare for your DPH Director's Hearing](https://www.sf.gov/prepare-your-dph-directors-hearing)",
+            "**DBI holds separate Director's Hearings** for building and housing code violations. If your hearing notice is from DBI, follow DBI's instructions instead. [Prepare for your Director's Hearing for a code violation](https://www.sf.gov/prepare-your-directors-hearing-code-violation)",
+          ],
+          karl: 'what_to_do -> Section. Section title: "Finish the work or respond to further enforcement". Section specifics: one Text block holding both paragraphs plus the bullets. The enforcement sentence uses the Article 11 Interpretation Guide’s high-level workflow. The hearing bullets restate only rules SF.gov publishes on the live DPH Environmental Health Transaction page "Prepare for your DPH Director’s Hearing" (schedule and room, open to the public, written submittals due one week ahead, interpreter requests two weeks ahead, Hearing Clerk email and phone; checked 2026-11-26), linked as a Link-tool External link. The last bullet disambiguates DBI’s separate hearing (DBI Transaction page, checked 2026-11-26) without adding any DBI requirement to this flow. Fee timing, appeal, and abatement details remain omitted.',
         },
       ],
     },

@@ -240,6 +240,12 @@ window.HHVC_PAGES['article11Guide'] = {
           target: 'afterReport',
           karl: 'Report Content -> inline page link.',
         },
+        {
+          title: "Prepare for your DPH Director's Hearing",
+          text: 'Read the rules for the hearing that Sec. 596 refers to, including written materials and interpreters.',
+          url: 'https://www.sf.gov/prepare-your-dph-directors-hearing',
+          karl: 'Report Content -> inline external link to the live SF.gov DPH Environmental Health hearing-rules page (checked 2026-11-26).',
+        },
       ],
     },
     {
