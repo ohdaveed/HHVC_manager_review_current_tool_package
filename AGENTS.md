@@ -465,10 +465,16 @@ job that does not. `changes` is the one that does not — it runs only
   and still builds locally, where no `dist/` can be assumed.
 - **e2e_complete** — the aggregator, and the only reason the job above could be
   sharded. **A matrixed job's check contexts are suffixed** (`E2E shard (1)`…),
-  so the required `Playwright end-to-end tests` context would be produced by
-  nothing and sit permanently pending — the same failure the paragraph below
-  describes. This job carries that name instead, so the protection settings
-  needed no edit for the shard and need none for a future reshard. It passes on
+  so the `Playwright end-to-end tests` context the ruleset required AT THE TIME
+  would have been produced by nothing and sat permanently pending — the same
+  failure the paragraph below describes. This job carries that name instead, so
+  the ruleset needed no edit for the shard and needs none for a future reshard.
+  **The ruleset has since narrowed to `CI passed` alone, which retires that
+  original reason without retiring the job:** `ci_ok` reaches the four shards
+  THROUGH this job, and the matrix-gating test in
+  `tests/ci-workflow.test.js` requires every matrixed job to be gated by a plain
+  job that `needs:` it. A single-context ruleset is not licence to delete this
+  one; that test is what would stop you. It passes on
   a matrix result of `success` or `skipped` (a docs-only or draft PR, matching
   what the unsharded job did) and fails on anything else — **but a skipped
   matrix is only a pass when nothing upstream failed**, and it checks EVERY
@@ -485,53 +491,74 @@ job that does not. `changes` is the one that does not — it runs only
   `always()`. It fails if any job above reported `failure` or `cancelled`, and
   separately if neither check path ran at all. See below.
 
-**Measured 2026-08-28: this repo is gated by repository RULESETS, not by
-classic branch protection.** `GET /repos/{owner}/{repo}/branches/main/protection`
-answers `404 Branch not protected`, while `GET /repos/{owner}/{repo}/rulesets`
-returns two active branch rulesets — `main-1` (21589341) and `main-2`
-(21589342). The settings therefore live under **Settings → Rules → Rulesets**,
-not Settings → Branches, and a ruleset does NOT appear in the `/protection`
-payload — which is why the older wording below survived so long: every check of
-the wrong endpoint came back empty and read as "nothing configured" rather than
-as "looking in the wrong place". The two rulesets carry these rules, and nothing else:
+**Measured 2026-08-28, re-measured 2026-11-26: this repo is gated by repository
+RULESETS, not by classic branch protection.** The settings live under
+**Settings → Rules → Rulesets**, not Settings → Branches, and a ruleset does NOT
+appear in the classic `/protection` payload — which is why the older wording
+here survived so long: every check of the wrong endpoint came back empty and
+read as "nothing configured" rather than as "looking in the wrong place".
 
-| Ruleset             | Rules                                               |
-| ------------------- | --------------------------------------------------- |
-| `main-1` (21589341) | `deletion`, `non_fast_forward`                      |
-| `main-2` (21589342) | `required_linear_history`, `required_status_checks` |
+**Read the rules with `GET /repos/{owner}/{repo}/rules/branches/main`.** That
+endpoint returns the rules in EFFECT on a branch whatever ruleset they came
+from, and it answers for an ordinary read token. Both obvious alternatives
+mislead instead of failing: `/branches/main/protection` is the classic endpoint
+and answers `404 Branch not protected` (or `403` for a token without admin),
+which reads as _unprotected_; and `/rulesets` lists the rulesets but needs admin
+to enumerate the rules inside them. A probe written against either degrades
+silently rather than erroring — the `ship` skill's required-context census read
+`/protection` and therefore never once succeeded here, printing its
+"unreadable, verdict is a floor" notice on every run as though that were a
+permissions quirk.
 
-Two consequences follow, and the first corrects a claim this repo acted on for
-days. **There is NO `pull_request` rule, so nothing requires review-thread
-resolution and nothing requires an approving review.** The merge train's
-"one remaining blocker" was diagnosed as `required_conversation_resolution`
-holding every PR; no such rule exists. Measured on 2026-08-28, two PRs
-(#235 and #213) each read `BLOCKED` with every context green, and each cleared
-on its own once CI finished — the state was PENDING CHECKS, not an unresolved thread. If
-you see `BLOCKED` here, wait for the checks before hunting for a thread.
+Measured 2026-11-26, **one** ruleset (`21589342`) carries all five rules; the
+second ruleset the 2026-08-28 reading found (`main-1`, 21589341) no longer
+contributes any:
 
-**Second, `required_linear_history` is what makes squash the only real option.**
-Merge commits are refused outright, so the choice on any PR is squash or
-rebase-and-merge, and every recent commit on `main` is a squash.
+| Rule                      | What it does here                                         |
+| ------------------------- | --------------------------------------------------------- |
+| `required_status_checks`  | Requires exactly ONE context, `CI passed`; `strict` is ON |
+| `required_linear_history` | Refuses merge commits — squash or rebase only             |
+| `pull_request`            | Requires NOTHING: 0 approvals, no thread resolution       |
+| `non_fast_forward`        | Refuses a force-push to `main`                            |
+| `deletion`                | Refuses deleting `main`                                   |
 
-**The required-context list further down was VERIFIED against `main-2`'s
-`required_status_checks` on 2026-08-28, and the two now match exactly.** All
-eight documented names are configured, in both directions: `ci.yml` defines
-nine jobs, eight of them non-matrixed, and those eight are precisely the eight
-required. `CI passed` was added to the ruleset once it landed, so the gate is
-enforcing rather than advisory.
+Three consequences follow, and the first two correct claims this repo acted on.
 
-**`CI passed` is required ALONGSIDE the other seven, not instead of them.**
-That is belt-and-braces and it works, but the section below argues the gate is
-worth requiring on its own: it reads every other job's result directly, so the
-seven are a hand-maintained transcript of a list that changes, which is the
-failure this whole section is about. Dropping them is a safe simplification
-whenever someone wants it — the gate already fails on anything they would have
-caught. Nothing is wrong today; this is an option, not a defect. Every required context is a real job,
-so none can sit permanently pending; and the one job that is deliberately NOT
-required is `E2E shard`, for the reason the matrix note below gives: it is
+**Nothing requires an approving review or thread resolution — but no longer
+because the rule is absent.** A `pull_request` rule now exists, where the
+2026-08-28 reading found none; it is configured with
+`required_approving_review_count: 0` and `required_review_thread_resolution:
+false`, so the conclusion is unchanged and the reason is not. The merge train's
+"one remaining blocker" was once diagnosed as `required_conversation_resolution`
+holding every PR, and that was wrong then and is still wrong now. Two PRs
+(#235 and #213) each read `BLOCKED` on 2026-08-28 with every context green, and
+each cleared once CI finished — the state was PENDING CHECKS. If you see
+`BLOCKED` here, wait for the checks before hunting for a thread.
+
+**`strict_required_status_checks_policy` is ON, so a PR must be up to date with
+`main` before it can merge.** That is why PRs here accumulate "merge `main` into
+branch" commits: it is the ruleset asking, not a reviewer. With
+`required_linear_history` also on, merge commits into `main` are refused
+outright, so the merge itself is a squash or a rebase however many merge commits
+the branch carries. (`pull_request` reports `allowed_merge_methods` including
+`merge`; `required_linear_history` is what actually forbids it.)
+
+**`CI passed` is now the ONLY required context — the other seven were dropped,
+and that is the simplification this section recommends rather than a
+regression.** The list further down is therefore a PRESCRIPTION, no longer a
+transcript of what is configured: it states what would have to be required if
+the aggregation gate did not exist, and `tests/ci-workflow.test.js` still pins
+it against `ci.yml` so a renamed job cannot slip past. What makes dropping the
+seven safe is that the gate reads every other job's result directly, so it fails
+on anything they would have caught — see the argument below. Every name on that
+prescribed list is a real job, so none of them could sit permanently pending if
+it were required; the one job deliberately left OFF it is `E2E shard`, for the
+reason the matrix note below gives: it is
 sharded, so it only ever produces suffixed contexts (`E2E shard (1)`…) and the
-bare name is produced by nothing. `Playwright end-to-end tests` is required in
-its place, which is the whole reason that aggregator job exists.
+bare name is produced by nothing. `Playwright end-to-end tests` stands in its
+place on the prescribed list, produced by the `e2e_complete` aggregator — which
+is why that job exists, and why it still earns its place now that the ruleset
+names neither of them.
 
 **The rulesets' required status checks are job NAMES, not job ids, and they
 have to be changed with this file.** Splitting the old `checks` job renamed the
@@ -584,9 +611,10 @@ failing when NEITHER the docs path nor the code path ran, which is the state a
 broken change filter produces and the one where a PR goes green having checked
 nothing.
 
-Until the ruleset is actually pointed at it, the gate is advisory, exactly as
-the rule above says of any unlisted job. It is additive either way: adding it
-breaks no existing required context, which is the opposite of renaming one.
+The ruleset is pointed at it — as of 2026-11-26 it is the only context
+required, per the measurement above — so the gate is enforcing rather than
+advisory. It was additive when it landed: adding a context breaks no existing
+one, which is the opposite of renaming one.
 
 The detector is the one people leave out, on the reasoning that it only
 computes outputs and cannot itself be skipped — which is true and beside the
@@ -595,18 +623,19 @@ reads as a pass, and the PR merges with nothing having been checked at all. An
 action outage or a permissions regression is enough to get there. Requiring it
 is what turns that silent green into a visible red.
 
-Adding a job to this file means adding its name here and to protection, or it
-is advisory.
+Adding a job to this file means adding its name here, and to the ruleset if
+the seven-context belt-and-braces shape is ever restored; under the single
+`CI passed` requirement the ruleset needs no edit, but `ci_ok`'s `needs` does.
 
 **Half of that is now gated.** `tests/ci-workflow.test.js` asserts that the
 enumeration above is exactly the set of job names `ci.yml` defines, in both
 directions and in both full mirrors — so a job renamed in the workflow, or one
 added and left off this list, fails CI at the moment of the edit rather than
 months later when a PR sits permanently pending against a context no job
-produces. It cannot read the rulesets itself (that needs a token and must
-not be a test dependency), so the remaining half — copying this list into the
-protection settings — is still yours. The test pins the list a human
-transcribes; it cannot pin the transcription.
+produces. It cannot read the ruleset itself (that needs a token and must
+not be a test dependency), so the remaining half — reconciling this list with
+the ruleset — is still yours. The test pins the list a human transcribes; it
+cannot pin the transcription.
 
 **A second workflow, `.github/workflows/link-check.yml`, runs weekly rather than
 per-PR.** It checks the links in this repo's own DOCUMENTATION — never mockup
@@ -2720,10 +2749,9 @@ grounded compliance audit of the open page, citing this repo's own
 the rest of the AI backend — additive, off unless configured, fails closed,
 never writes anything, and every result carries the same `disclosure` string.
 
-- **Corpus is `docs/source/**/*.md`, `README.md` excluded, publication status
-  not filtered.** `build_scripts/ingest-knowledge.js` globs the whole tree
-  except folder-index `README.md` files — including the one file named
-  `DRAFT-NOT-FOR-PUBLICATION`, on an explicit reviewer decision. The
+- **Corpus is `docs/source/**/\*.md`, `README.md`excluded, publication status
+  not filtered.**`build_scripts/ingest-knowledge.js`globs the whole tree
+  except folder-index`README.md`files — including the one file named`DRAFT-NOT-FOR-PUBLICATION`, on an explicit reviewer decision. The
   alternative was the ingestion script silently deciding what counts as
   citable, which is the failure mode this feature exists to avoid.
 - **One new table, same store as `review_pages`.** `knowledge_chunks` lives
